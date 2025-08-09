@@ -69,9 +69,7 @@ main { min-height: 100%; }
   height: 80%;
   object-fit: contain;
   object-position: right bottom;
-  opacity: 0.12;
-  mix-blend-mode: screen;
-  filter: saturate(120%) contrast(110%) drop-shadow(0 0 24px rgba(24, 231, 255, 0.25)) drop-shadow(0 0 36px rgba(179, 107, 255, 0.2));
+  opacity: 0.7;
   z-index: 3; /* above gradient overlay and title */
   pointer-events: none;
  }
@@ -273,7 +271,7 @@ main { min-height: 100%; }
     max-height: 70%; /* Limit height to 50% of the viewport */
     object-fit: cover; /* Cover the area */
     object-position: center; /* Center the image */
-    opacity: 0.12; /* Keep subtle on mobile */
+    opacity: 0.5; /* Keep subtle on mobile */
     z-index: 3; /* ensure above title and gradient on mobile too */
     filter: saturate(120%) contrast(110%); /* Remove drop-shadows to avoid overflow */
   }

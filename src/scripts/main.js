@@ -141,7 +141,7 @@
   }
 
   if (prefersReduced) {
-    if (portrait) gsap.to(portrait, { opacity: 0.12, duration: 0.3 });
+    if (portrait) gsap.to(portrait, { opacity: 0.5, duration: 0.3 });
     gsap.to(letters, { opacity: 1, duration: 0.3, stagger: 0.02 });
     return; // Skip complex motion
   }
@@ -151,11 +151,11 @@
 
   // Animate portrait subtle parallax fade
   if (portrait) {
-    tl.to(portrait, { opacity: 0.12, scale: 1, duration: 0.9, y: 0 }, 0.1);
+    tl.to(portrait, { opacity: 0.5, scale: 1, duration: 0.9, y: 0 }, 0.1);
 
     // TV-style fade loop: visible 5s, glitch-out 0.6s, hidden 2s, glitch-in 0.6s, loop
     const tv = gsap.timeline({ repeat: -1, repeatDelay: 0, defaults: { ease: 'power2.out' } });
-    tv.to(portrait, { opacity: 0.12, duration: 0.2 })         // ensure baseline visible
+    tv.to(portrait, { opacity: 0.5, duration: 0.2 })         // ensure baseline visible
       .to(portrait, { duration: 5.0 })                        // hold
       // glitch-out burst
       .to(portrait, { opacity: 0.35, filter: 'saturate(160%) contrast(130%) hue-rotate(8deg)', duration: 0.08, ease: 'power1.in' })
@@ -166,7 +166,7 @@
       // glitch-in burst
       .to(portrait, { opacity: 0.18, filter: 'saturate(180%) contrast(130%) hue-rotate(-8deg)', duration: 0.1, ease: 'power1.out' })
       .to(portrait, { opacity: 0.1, filter: 'saturate(120%) contrast(115%)', duration: 0.08 }, '>-0.02')
-      .to(portrait, { opacity: 0.12, filter: 'saturate(120%) contrast(110%)', duration: 0.42, ease: 'power3.out' })
+      .to(portrait, { opacity: 0.5, filter: 'saturate(120%) contrast(110%)', duration: 0.42, ease: 'power3.out' })
       .call(animateLetters); // re-run title animation on reappear
   }
 
