@@ -5,7 +5,7 @@
     return;
   }
 
-  const DEBUG_SCROLL = true; // set to false to disable markers/logs
+  const DEBUG_SCROLL = false; // set to false to disable markers/logs
 
   const title = document.querySelector('.hero__title .word');
   if (!title) return;
@@ -401,21 +401,41 @@
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: beatsTitle || sectionEl || svgEl, // start when "Spinning Beats" hits center
-          start: 'top 35%',
+          start: isMobile ? 'top 20%' : 'top 35%', // earlier trigger on mobile to prevent overlap
           end: () => {
             if (sectionEl) {
-              sectionEl.style.minHeight = `calc(100vh + ${unifiedEnd}px)`;
+              // Add extra spacing on mobile to prevent title overlap
+              const extraSpacing = isMobile ? 100 : 0;
+              sectionEl.style.minHeight = `calc(100vh + ${unifiedEnd + extraSpacing}px)`;
             }
             return '+=' + unifiedEnd;
           },
           scrub: 0.25,
           pin: beatsContainer || true,              // pin only the beats block; leave section title at top
           pinSpacing: true,
-          anticipatePin: 3,
+          anticipatePin: isMobile ? 1 : 3,         // less anticipation on mobile
           invalidateOnRefresh: true,
           markers: DEBUG_SCROLL,
-          onEnter: () => document.body.classList.add('in-projects'),
-          onEnterBack: () => document.body.classList.add('in-projects'),
+          onEnter: () => {
+            document.body.classList.add('in-projects');
+            // Ensure Projects title becomes sticky when entering the section
+            const projectsTitle = document.getElementById('projects-title');
+            if (projectsTitle) {
+              projectsTitle.style.position = 'sticky';
+              projectsTitle.style.top = isMobile ? 'env(safe-area-inset-top, 0)' : '0';
+              projectsTitle.style.zIndex = '50';
+            }
+          },
+          onEnterBack: () => {
+            document.body.classList.add('in-projects');
+            // Ensure Projects title becomes sticky when entering back
+            const projectsTitle = document.getElementById('projects-title');
+            if (projectsTitle) {
+              projectsTitle.style.position = 'sticky';
+              projectsTitle.style.top = isMobile ? 'env(safe-area-inset-top, 0)' : '0';
+              projectsTitle.style.zIndex = '50';
+            }
+          },
           onLeave: () => document.body.classList.remove('in-projects'),
           onLeaveBack: () => document.body.classList.remove('in-projects'),
           onUpdate: DEBUG_SCROLL ? (self) => {
@@ -532,7 +552,7 @@
     const descriptions = [
       {
         number: 1,
-        title: 'Help spinners flow',
+        title: 'Lead spinners into their flow-state',
         text: 'Play the right energy with the right speed in each segment.'
       },
       {

@@ -177,11 +177,11 @@ main { min-height: 100%; }
 
 .section--projects h2 {
   font-size: clamp(1.6rem, 3.4vw, 3rem);
-  margin: 0 0 0.25rem 0;
+  margin: 0; /* Remove margin to prevent sticky positioning issues */
 }
 .section--projects p {
   color: var(--color-muted);
-  margin: 0.25rem 0 0 0;
+  margin: 1rem 0 0 0; /* Add more space after Projects title */
 }
 
 /* Accessibility: focus styles */
@@ -288,9 +288,13 @@ main { min-height: 100%; }
   position: sticky;
   top: 0;
   z-index: 50;
-  padding: 0.25rem 0;
- /* background: color-mix(in oklab, var(--color-bg) 88%, transparent); */
-  backdrop-filter: blur(2px);
+  padding: 1rem 0;
+  margin: 0;
+  background: color-mix(in oklab, var(--color-bg) 98%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
 }
 @supports (top: env(safe-area-inset-top)) {
   #projects-title { top: env(safe-area-inset-top); }
