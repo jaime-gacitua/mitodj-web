@@ -5,6 +5,8 @@
     return;
   }
 
+  const DEBUG_SCROLL = true; // set to false to disable markers/logs
+
   const title = document.querySelector('.hero__title .word');
   if (!title) return;
 
@@ -269,22 +271,13 @@
       x += w;
     }
 
-    // Progress overlay: black rectangle that grows from left to right, covering bars
-    const progressRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    progressRect.setAttribute('x', String(leftEdge));
-    const overlayPad = 4; // cover stroke highlights above and below
-    progressRect.setAttribute('y', String(baselineY - barMaxHeight - overlayPad));
-    progressRect.setAttribute('width', '0');
-    progressRect.setAttribute('height', String(barMaxHeight + overlayPad * 2));
-    progressRect.setAttribute('fill', '#000');
-    progressRect.setAttribute('opacity', '0.8');
-    svgEl.appendChild(progressRect);
+    // (Alternate version without progress overlay)
 
-    // Small clock at top-right of the plot
+    // Small clock at bottom-left of the plot with white time arrow
     const clockRadius = 22;
     const clockPadding = 12;
-    const clockCx = leftEdge + targetWidth - clockRadius - clockPadding;
-    const clockCy = (baselineY - barMaxHeight) - clockRadius - clockPadding; // lift above bars
+    const clockCx = leftEdge + clockRadius + clockPadding;
+    const clockCy = baselineY + clockRadius + (clockPadding / 2);
 
     const clockGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     svgEl.appendChild(clockGroup);
@@ -321,28 +314,69 @@
     minuteHand.setAttribute('stroke-linecap', 'round');
     clockGroup.appendChild(minuteHand);
 
-    // Label for Zone 1
+    // Time axis arrow to the right of the clock
+    const axisStartX = clockCx + clockRadius + 10;
+    const axisEndX = axisStartX + 70;
+    const axisY = clockCy;
+    const axis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    axis.setAttribute('x1', String(axisStartX));
+    axis.setAttribute('y1', String(axisY));
+    axis.setAttribute('x2', String(axisEndX));
+    axis.setAttribute('y2', String(axisY));
+    axis.setAttribute('stroke', '#ffffff');
+    axis.setAttribute('stroke-width', '2');
+    axis.setAttribute('stroke-linecap', 'round');
+    clockGroup.appendChild(axis);
+    const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    arrow.setAttribute('points', `${axisEndX},${axisY} ${axisEndX - 8},${axisY - 5} ${axisEndX - 8},${axisY + 5}`);
+    arrow.setAttribute('fill', '#ffffff');
+    clockGroup.appendChild(arrow);
+    const timeText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    timeText.setAttribute('x', String(axisStartX + 8));
+    timeText.setAttribute('y', String(axisY + 16));
+    timeText.setAttribute('fill', '#ffffff');
+    timeText.setAttribute('font-size', '12');
+    timeText.setAttribute('opacity', '0.9');
+    timeText.textContent = 'time →';
+    clockGroup.appendChild(timeText);
+
     const zoneMessages = [
-      'Zone 1: Intro beats, 0% effort',
-      'Zone 2: Warm-up beats, 40% effort',
-      'Zone 3: Workout beats, 70% effort',
-      'Zone 4: Intense beats, 90% effort',
-      'Zone 5: Legend beats, 120% effort',
+      'Zone 1: 0%',
+      'Zone 2: 40%',
+      'Zone 3: 70%',
+      'Zone 4: 90%',
+      'Zone 5: 120%',
     ];
     const zoneColors = ['#a2a9b3', '#6aa7ff', '#3df06a', '#fff661', '#ff2a2a'];
-    const zoneTexts = zoneMessages.map((msg, i) => {
+    const zoneTexts = [];
+    // Create labels equally spaced from left of first bar; keep Zone 1 position, reduce spacing for others
+    const labelsY = (baselineY - barMaxHeight) - 6; // raised above bars
+    const firstFiveBars = barNodes.slice(0, 5);
+    const firstLeft = firstFiveBars[0] ? firstFiveBars[0].x : leftEdge;
+    const lastBar = firstFiveBars[4];
+    const lastRight = lastBar ? lastBar.x + Number(lastBar.node.getAttribute('width')) : (leftEdge + targetWidth * 0.25);
+    const totalSpan = Math.max(1, lastRight - firstLeft);
+    const pushRight = 28; // keep Zone 1 where it was
+    const zone1X = Math.round(firstLeft + pushRight);
+    // Reduce spacing versus full span
+    const avgGap = totalSpan / Math.max(1, 5 - 1);
+    const spacing = Math.max(36, Math.round(avgGap * 0.76));
+    for (let i = 0; i < 5; i += 1) {
+      const tx = i === 0 ? zone1X : zone1X + i * spacing;
       const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      t.setAttribute('x', String(leftEdge + 8));
-      t.setAttribute('y', String((baselineY - barMaxHeight) - 10));
+      // Set final position immediately; animation will only fade in
+      t.setAttribute('x', String(tx));
+      t.setAttribute('y', String(labelsY));
       t.setAttribute('text-anchor', 'start');
+      t.setAttribute('dominant-baseline', 'alphabetic');
       t.setAttribute('fill', zoneColors[i] || '#eaf1ff');
       t.setAttribute('font-size', '20');
       t.setAttribute('font-weight', '800');
       t.setAttribute('opacity', '0');
-      t.textContent = msg;
+      t.textContent = zoneMessages[i];
       svgEl.appendChild(t);
-      return t;
-    });
+      zoneTexts[i] = { node: t, tx, ty: labelsY };
+    }
 
     // Scroll-triggered entrance: bars fly from edges then settle
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -358,77 +392,277 @@
       const sectionEl = document.getElementById('projects');
       const beatsContainer = document.querySelector('.beats');
       const beatsTitle = document.getElementById('beats-title');
-      // Compute a reasonable end distance that finishes within typical page height
-      const endDistance = Math.max(1000, Math.min(1200, Math.round(window.innerHeight * 1.2)));
+      const isMobile = window.matchMedia('(max-width: 640px)').matches;
+      // Unified, short-and-sweet scroll span (viewport-relative for all)
+      const unifiedEnd = Math.max(900, Math.round(window.innerHeight * 1.25));
+      if (DEBUG_SCROLL) {
+        console.table({ bars: barNodes.length, targetWidth, unifiedEnd, vh: window.innerHeight, isMobile });
+      }
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: beatsTitle || sectionEl || svgEl, // start when "Spinning Beats" hits center
           start: 'top 35%',
-          end: () => '+=' + endDistance,
-          scrub: 0.45,
+          end: () => {
+            if (sectionEl) {
+              sectionEl.style.minHeight = `calc(100vh + ${unifiedEnd}px)`;
+            }
+            return '+=' + unifiedEnd;
+          },
+          scrub: 0.25,
           pin: beatsContainer || true,              // pin only the beats block; leave section title at top
           pinSpacing: true,
-          anticipatePin: 1,
-          invalidateOnRefresh: true
+          anticipatePin: 3,
+          invalidateOnRefresh: true,
+          markers: DEBUG_SCROLL,
+          onEnter: () => document.body.classList.add('in-projects'),
+          onEnterBack: () => document.body.classList.add('in-projects'),
+          onLeave: () => document.body.classList.remove('in-projects'),
+          onLeaveBack: () => document.body.classList.remove('in-projects'),
+          onUpdate: DEBUG_SCROLL ? (self) => {
+            const p = Math.round(self.progress * 100);
+            if (!renderBeats._lastP || Math.abs(p - renderBeats._lastP) >= 10) {
+              renderBeats._lastP = p;
+              console.log(`[Beats] progress: ${p}% start:${self.start} end:${self.end} scroll:${Math.round(self.scroll())}`);
+            }
+          } : undefined
         },
-        defaults: { ease: 'back.out(1.6)' }
+        defaults: { ease: 'none' }
       });
 
-      barNodes.forEach((b, idx) => {
-        const dir = directions[idx % directions.length];
-        const from = { x: b.x, y: b.y };
-        if (dir === 'left') from.x = -vw - overshoot;
-        if (dir === 'right') from.x = vw + overshoot;
-        if (dir === 'top') from.y = -vh - overshoot;
-        if (dir === 'bottom') from.y = vh + overshoot;
-
-        tl.fromTo(b.node,
-          { attr: { x: from.x, y: from.y }, opacity: 0 },
-          { attr: { x: b.x, y: b.y }, opacity: 1, duration: 0.6 },
-          idx * 0.015
-        );
+      // Rotate labels to -45 degrees and fade them in place (no movement)
+      zoneTexts.forEach((tdata) => {
+        if (tdata) {
+          gsap.set(tdata.node, { rotation: -45, svgOrigin: `${tdata.tx} ${tdata.ty}` });
+        }
       });
 
-      // Clock flies in from the top-right with the bars
-      tl.fromTo(clockGroup,
-        { x: width * 0.25, y: -vh * 0.5, opacity: 0 },
-        { x: 0, y: 0, opacity: 1, duration: 0.65, ease: 'back.out(1.4)' },
-        0.05
-      );
+      // Unified bar animation: fly from bottom-center in batches of 10
+      const centerX = Math.round(leftEdge + targetWidth / 2);
+      const batchSize = 10;
+      const batchGap = 0.05; // delay between batches
+      const fromY = baselineY + Math.round(barMaxHeight * 1.5);
+      for (let i = 0; i < barNodes.length; i += batchSize) {
+        const batch = barNodes.slice(i, i + batchSize);
+        const batchStart = (i / batchSize) * batchGap;
+        batch.forEach((b) => {
+          tl.fromTo(b.node,
+            { attr: { x: centerX, y: fromY }, opacity: 0 },
+            { attr: { x: b.x, y: b.y }, opacity: 1, duration: 0.22 },
+            batchStart
+          );
+        });
+      }
 
-      // Stage labels and highlights across the first five bars while growing the progress overlay
-      const segDur = 0.16; // per-zone duration; 5 zones ~0.8 total
-      const firstFive = barNodes.slice(0, 5);
-      const cumWidths = firstFive.map((b, i) => {
-        const w = Number(b.node.getAttribute('width')) || 0;
-        return w + (i > 0 ? firstFive.slice(0, i).reduce((s, bb) => s + Number(bb.node.getAttribute('width')) || 0, 0) : 0);
+      // Clock fades in from bottom-left with the bars
+      tl.fromTo(clockGroup, { opacity: 0 }, { opacity: 1, duration: 0.25, ease: 'none' }, 0);
+
+      // Zone labels fade in as bars arrive
+      zoneTexts.forEach((tdata, i) => {
+        if (tdata) tl.to(tdata.node, { opacity: 1, duration: 0.2, ease: 'none' }, 0.1 + i * 0.02);
       });
 
-      firstFive.forEach((b, i) => {
-        const prev = i > 0 ? firstFive[i - 1] : null;
-        const showText = zoneTexts[i];
-        const hideText = i > 0 ? zoneTexts[i - 1] : null;
+      // Add 3 non-interactive numbered bubbles (created now, faded in at the end)
+      function addBubbleAtBar(barIdx, number, dx = 0, dy = 0) {
+        const b = barNodes[barIdx];
+        if (!b) return null;
+        const bbox = b.node.getBBox();
+        const bx = bbox.x + bbox.width / 2 + dx;
+        const by = Math.max(10, bbox.y - 24 + dy);
 
-        // Progress to cover up to the end of this bar
-        tl.to(progressRect, { attr: { width: cumWidths[i] }, duration: segDur, ease: 'none' }, i === 0 ? '+=0.12' : '>');
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('class', 'note-bubble');
+        g.setAttribute('opacity', '0');
 
-        // Toggle zone labels and bar highlight
-        if (hideText) tl.to(hideText, { opacity: 0, duration: 0.05 }, '<');
-        tl.to(showText, { opacity: 1, duration: 0.08 }, '<');
-        if (prev) tl.to(prev.node, { attr: { 'stroke-width': 0 }, duration: 0.05 }, '<');
-        tl.to(b.node, { attr: { stroke: '#ffffff', 'stroke-width': 2 }, duration: 0.08 }, '<');
-      });
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', String(bx));
+        circle.setAttribute('cy', String(by));
+        circle.setAttribute('r', '24');
+        circle.setAttribute('fill', '#ffffff');
+        circle.setAttribute('stroke', '#111822');
+        circle.setAttribute('stroke-width', '3');
+        g.appendChild(circle);
 
-      // Finish covering the remaining bars
-      const remainingDur = 0.4;
-      tl.to(progressRect, { attr: { width: targetWidth }, duration: remainingDur, ease: 'none' }, '>');
+        const num = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        num.setAttribute('x', String(bx));
+        num.setAttribute('y', String(by + 8));
+        num.setAttribute('text-anchor', 'middle');
+        num.setAttribute('fill', '#111822');
+        num.setAttribute('font-size', '20');
+        num.setAttribute('font-weight', '900');
+        num.textContent = String(number);
+        g.appendChild(num);
 
-      // Rotate minute hand over the whole progress span
-      tl.fromTo(minuteHand,
-        { rotation: 0 },
-        { rotation: 270, duration: segDur * 5 + remainingDur, ease: 'none', svgOrigin: `${clockCx} ${clockCy}` },
-        `-=${remainingDur + segDur * 5}` // align at the start of progress sequence
-      );
+        svgEl.appendChild(g);
+        return g;
+      }
+      // Create bubbles now, and fade them in at the end (part of the scrubbed timeline)
+      const totalBars = barNodes.length;
+      const fixedIdx = [0, Math.floor(totalBars / 2), Math.max(0, totalBars - 1)];
+      const bubbles = fixedIdx.map((idx, i) => addBubbleAtBar(Math.max(0, Math.min(totalBars - 1, idx)), i + 1));
+      bubbles.forEach((b) => { if (b) gsap.set(b, { opacity: 0 }); });
+      tl.to(bubbles.filter(Boolean), { opacity: 1, duration: 0.2, stagger: 0.05, ease: 'none' }, '+=0.05');
+
+      // After configuration, refresh ScrollTrigger to account for new pin spacing
+      ScrollTrigger.refresh();
+    }
+
+    // Add the description section below the plot
+    addDescriptionSection(svgEl);
+  }
+
+  function addDescriptionSection(svgEl) {
+    // Create container for the description section
+    const container = document.createElement('div');
+    container.className = 'bubble-descriptions';
+    container.style.cssText = `
+      margin-top: 40px;
+      padding: 30px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    `;
+
+    // Create the three description items
+    const descriptions = [
+      {
+        number: 1,
+        title: 'Help spinners flow',
+        text: 'Play the right energy with the right speed in each segment.'
+      },
+      {
+        number: 2,
+        title: 'Inspire people\'s 120%',
+        text: 'Match the music explosions with the red zones! Build towards a memorable grand finale!'
+      },
+      {
+        number: 3,
+        title: 'Turn the class into an epic journey',
+        text: 'with themed courses like personal courage, women empowerment, or just 90s\' pop classics!'
+      }
+    ];
+
+    descriptions.forEach((desc, index) => {
+      const item = document.createElement('div');
+      item.style.cssText = `
+        display: flex;
+        align-items: flex-start;
+        gap: 20px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transition: all 0.3s ease;
+      `;
+
+      // Create the bubble
+      const bubble = document.createElement('div');
+      bubble.style.cssText = `
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: #ffffff;
+        border: 3px solid #111822;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-weight: 900;
+        font-size: 20px;
+        color: #111822;
+      `;
+      bubble.textContent = desc.number;
+
+      // Create the text content
+      const textContent = document.createElement('div');
+      textContent.style.cssText = `
+        flex: 1;
+        color: #eaf1ff;
+      `;
+
+      const title = document.createElement('h3');
+      title.style.cssText = `
+        margin: 0 0 8px 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: #ffffff;
+      `;
+      title.textContent = desc.title;
+
+      const text = document.createElement('p');
+      text.style.cssText = `
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.5;
+        color: #a2a9b3;
+      `;
+      text.textContent = desc.text;
+
+      textContent.appendChild(title);
+      textContent.appendChild(text);
+      item.appendChild(bubble);
+      item.appendChild(textContent);
+      container.appendChild(item);
+    });
+
+    // Add YouTube video section
+    const videoSection = document.createElement('div');
+    videoSection.style.cssText = `
+      margin-top: 30px;
+      text-align: center;
+    `;
+
+    const videoTitle = document.createElement('h3');
+    videoTitle.style.cssText = `
+      margin: 0 0 20px 0;
+      font-size: 20px;
+      font-weight: 700;
+      color: #ffffff;
+      text-align: center;
+    `;
+    videoTitle.textContent = 'See Demo';
+
+    const videoContainer = document.createElement('div');
+    videoContainer.style.cssText = `
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      aspect-ratio: 16/9;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    `;
+
+    const iframe = document.createElement('iframe');
+    iframe.src = 'https://www.youtube.com/embed/ROaMPcNN5mE';
+    iframe.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    `;
+    iframe.setAttribute('title', 'MITO DJ Demo Video');
+    iframe.setAttribute('frameborder', '0');
+    iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+    iframe.setAttribute('allowfullscreen', '');
+
+    videoContainer.appendChild(iframe);
+    videoSection.appendChild(videoTitle);
+    videoSection.appendChild(videoContainer);
+    container.appendChild(videoSection);
+
+    // Insert the container after the SVG element
+    const parent = svgEl.parentElement;
+    if (parent) {
+      parent.insertBefore(container, svgEl.nextSibling);
     }
   }
 })(); 

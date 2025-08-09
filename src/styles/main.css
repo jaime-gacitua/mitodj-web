@@ -7,6 +7,7 @@
   --color-accent: #b36bff;     /* Neon violet */
   --color-accent-2: #18e7ff;   /* Neon cyan */
   --glow-strong: 0 0 24px rgba(179, 107, 255, 0.35), 0 0 48px rgba(24, 231, 255, 0.25);
+  --projects-extra-scroll: 1200px; /* fallback extra height to allow ScrollTrigger to finish */
 }
 
 * { box-sizing: border-box; }
@@ -14,8 +15,8 @@ html, body { height: 100%; }
 
 body {
   margin: 0;
-  background: radial-gradient(1200px 800px at 80% -10%, color-mix(in oklab, var(--color-accent-2) 40%, transparent) 0%, transparent 55%),
-              radial-gradient(1000px 700px at 10% 110%, color-mix(in oklab, var(--color-accent) 40%, transparent) 0%, transparent 60%),
+  background: radial-gradient(1200px 800px at 80% -10%, color-mix(in oklab, var(--color-accent-2) 22%, transparent) 0%, transparent 60%),
+              radial-gradient(1000px 700px at 10% 110%, color-mix(in oklab, var(--color-accent) 18%, transparent) 0%, transparent 68%),
               var(--color-bg);
   color: var(--color-text);
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
@@ -38,11 +39,21 @@ main { min-height: 100%; }
   padding: 6rem 1.5rem;
 }
 
+/* Fade hero to pure black toward the bottom for seamless transition */
+.section--hero::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0; top: 45%;
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, #000 70%, #000 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
 .hero__backdrop {
   position: absolute;
   inset: -10%;
-  background: radial-gradient(600px 600px at 50% 40%, rgba(255,255,255,0.05), transparent 60%);
-  filter: blur(40px) saturate(120%);
+  background: radial-gradient(600px 600px at 50% 40%, rgba(255,255,255,0.02), transparent 60%);
+  filter: blur(32px) saturate(105%);
   pointer-events: none;
 }
 
@@ -61,13 +72,14 @@ main { min-height: 100%; }
   opacity: 0.12;
   mix-blend-mode: screen;
   filter: saturate(120%) contrast(110%) drop-shadow(0 0 24px rgba(24, 231, 255, 0.25)) drop-shadow(0 0 36px rgba(179, 107, 255, 0.2));
-  z-index: 0;
+  z-index: 3; /* above gradient overlay and title */
   pointer-events: none;
  }
 
+/* ensure title sits above the fade overlay */
  .hero__title {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: inline-block;
   font-size: clamp(2.8rem, 8vw + 1rem, 10rem);
   letter-spacing: 0.04em;
@@ -113,8 +125,9 @@ main { min-height: 100%; }
 .scroll-indicator .arrow { width: 20px; height: 20px; opacity: 0.9; }
 
 .section--projects {
-  background: linear-gradient(180deg, transparent, rgba(255,255,255,0.02) 20%, var(--color-surface) 40%);
+  background: #000; /* solid black */
   padding: clamp(1rem, 3vw, 2rem) 1.25rem 6rem; /* reduced top padding to sit closer to hero */
+  min-height: calc(100vh + var(--projects-extra-scroll)); /* ensure enough scroll space by default */
 }
 
 /* Spinning Beats */
@@ -257,11 +270,11 @@ main { min-height: 100%; }
     bottom: 0; /* Align to bottom of the screen */
     width: 100%; /* Use the entire width of the screen */
     height: auto; /* Maintain aspect ratio */
-    max-height: 50%; /* Limit height to 50% of the viewport */
+    max-height: 70%; /* Limit height to 50% of the viewport */
     object-fit: cover; /* Cover the area */
     object-position: center; /* Center the image */
     opacity: 0.12; /* Keep subtle on mobile */
-    z-index: 1;
+    z-index: 3; /* ensure above title and gradient on mobile too */
     filter: saturate(120%) contrast(110%); /* Remove drop-shadows to avoid overflow */
   }
   .hero__backdrop { inset: 0; } /* prevent backdrop overflow on mobile */
@@ -276,9 +289,13 @@ main { min-height: 100%; }
   top: 0;
   z-index: 50;
   padding: 0.25rem 0;
-  background: color-mix(in oklab, var(--color-bg) 88%, transparent);
+ /* background: color-mix(in oklab, var(--color-bg) 88%, transparent); */
   backdrop-filter: blur(2px);
 }
 @supports (top: env(safe-area-inset-top)) {
   #projects-title { top: env(safe-area-inset-top); }
+} 
+
+body.in-projects .section--projects {
+  background: #000; /* keep black background while in projects */
 } 
