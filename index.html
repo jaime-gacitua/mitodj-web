@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MITO DJ</title>
+    <meta name="description" content="MITO DJ — projects, mixes, ideas" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="./src/styles/main.css" />
+    <link rel="icon" href="/images/logo-mito-dj-sin-fondo.png" type="image/png" />
+  </head>
+  <body>
+    <img class="site-logo" src="/images/logo-mito-dj-sin-fondo.png" alt="MITO DJ logo" />
+
+    <main>
+      <section id="hero" class="section section--hero" aria-labelledby="site-title">
+        <div class="hero__backdrop" aria-hidden="true"></div>
+
+        <img id="portrait" class="hero__portrait" src="/images/portrait.cropped.png" alt="Background portrait" />
+
+        <h1 id="site-title" class="hero__title" aria-label="MITO DJ">
+          <span class="word" data-word="MITO DJ">
+            <span class="letter">M</span>
+            <span class="letter">I</span>
+            <span class="letter">T</span>
+            <span class="letter">O</span>
+            <span class="letter letter--space"> </span>
+            <span class="letter">D</span>
+            <span class="letter">J</span>
+          </span>
+        </h1>
+
+        <div class="scroll-indicator" aria-hidden="true">
+          <span>Scroll</span>
+          <svg viewBox="0 0 24 24" class="arrow"><path d="M12 5v14m0 0l-6-6m6 6l6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </section>
+
+      <section id="projects" class="section section--projects" aria-labelledby="projects-title">
+        <div class="container">
+          <h2 id="projects-title">Projects</h2>
+          
+          <div class="beats" aria-labelledby="beats-title">
+            <h3 id="beats-title">Spinning Beats</h3>
+            <p class="beats__subtitle">Goal: Elevate spinner's experience with music</p>
+            <div id="beats-root" class="beats__root">
+              <svg id="beats-plot" class="beats__svg" viewBox="0 0 1200 200" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Spinning class intensity bars"></svg>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <script src="./src/scripts/main.js"></script>
+  </body>
+</html> 
