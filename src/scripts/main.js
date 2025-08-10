@@ -622,28 +622,15 @@
       }
       // Create bubbles now, positioned at their final locations from the start
       const totalBars = barNodes.length;
-      const fixedIdx = [0, Math.floor(totalBars / 2), Math.max(0, totalBars - 1)];
+      const fixedIdx = [6, Math.floor(totalBars / 2), Math.max(0, totalBars - 1)]; // Bubble 1 at 7th bar (index 6)
       
       // Calculate final positions for bubbles before creating them
       const bubblePositions = fixedIdx.map((idx, i) => {
         const bar = barNodes[Math.max(0, Math.min(totalBars - 1, idx))];
         if (bar && bar.node) {
           const bbox = bar.node.getBBox();
-          let bx = bbox.x + bbox.width / 2;
+          const bx = bbox.x + bbox.width / 2;
           const by = Math.max(10, bbox.y - 24);
-          
-          // Special positioning for bubble 1: place it between zone 4 and zone 5
-          if (i === 0) {
-            // Calculate position between zone 4 and zone 5
-            const zone4X = zone1X + 3 * spacing; // Zone 4 position
-            const zone5X = zone1X + 4 * spacing; // Zone 5 position
-            bx = (zone4X + zone5X) / 2; // Center between zones
-            
-            // Debug logging for bubble 1 positioning
-            if (DEBUG_SCROLL) {
-              console.log(`Bubble 1 positioning: zone4X=${zone4X}, zone5X=${zone5X}, bx=${bx}, isMobile=${isMobile}`);
-            }
-          }
           
           return { bx, by };
         }
