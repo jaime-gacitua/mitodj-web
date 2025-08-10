@@ -496,12 +496,21 @@
       });
 
       // Add 3 non-interactive numbered bubbles (created now, faded in at the end)
-      function addBubbleAtBar(barIdx, number, dx = 0, dy = 0) {
+      function addBubbleAtBar(barIdx, number, finalX = null, finalY = null) {
         const b = barNodes[barIdx];
         if (!b) return null;
-        const bbox = b.node.getBBox();
-        const bx = bbox.x + bbox.width / 2 + dx;
-        const by = Math.max(10, bbox.y - 24 + dy);
+        
+        let bx, by;
+        if (finalX !== null && finalY !== null) {
+          // Use the provided final position
+          bx = finalX;
+          by = finalY;
+        } else {
+          // Fallback to bar-based positioning
+          const bbox = b.node.getBBox();
+          bx = bbox.x + bbox.width / 2;
+          by = Math.max(10, bbox.y - 24);
+        }
 
         const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         g.setAttribute('class', 'note-bubble');
@@ -542,51 +551,42 @@
         svgEl.appendChild(g);
         return g;
       }
-      // Create bubbles now, and fade them in at the end (part of the scrubbed timeline)
+      // Create bubbles now, positioned at their final locations from the start
       const totalBars = barNodes.length;
       const fixedIdx = [0, Math.floor(totalBars / 2), Math.max(0, totalBars - 1)];
-      const bubbles = fixedIdx.map((idx, i) => addBubbleAtBar(Math.max(0, Math.min(totalBars - 1, idx)), i + 1));
-      bubbles.forEach((b) => { if (b) gsap.set(b, { opacity: 0 }); });
       
-      // Position bubbles after all bars have finished animating to their final positions
-      tl.call(() => {
-        bubbles.forEach((bubble, i) => {
-          if (bubble) {
-            const barIdx = fixedIdx[i];
-            const bar = barNodes[barIdx];
-            if (bar && bar.node) {
-              const bbox = bar.node.getBBox();
-              let bx = bbox.x + bbox.width / 2;
-              const by = Math.max(10, bbox.y - 24);
-              
-              // Special positioning for bubble 1: place it between zone 4 and zone 5
-              if (i === 0) {
-                // Calculate position between zone 4 and zone 5
-                const zone4X = zone1X + 3 * spacing; // Zone 4 position
-                const zone5X = zone1X + 4 * spacing; // Zone 5 position
-                bx = (zone4X + zone5X) / 2; // Center between zones
-                
-                // Debug logging for bubble 1 positioning
-                if (DEBUG_SCROLL) {
-                  console.log(`Bubble 1 positioning: zone4X=${zone4X}, zone5X=${zone5X}, bx=${bx}, isMobile=${isMobile}`);
-                }
-              }
-              
-              // Update bubble position to match the bar's final position
-              const circle = bubble.querySelector('circle');
-              const text = bubble.querySelector('text');
-              if (circle) {
-                circle.setAttribute('cx', String(bx));
-                circle.setAttribute('cy', String(by));
-              }
-              if (text) {
-                text.setAttribute('x', String(bx));
-                text.setAttribute('y', String(by + 8));
-              }
+      // Calculate final positions for bubbles before creating them
+      const bubblePositions = fixedIdx.map((idx, i) => {
+        const bar = barNodes[Math.max(0, Math.min(totalBars - 1, idx))];
+        if (bar && bar.node) {
+          const bbox = bar.node.getBBox();
+          let bx = bbox.x + bbox.width / 2;
+          const by = Math.max(10, bbox.y - 24);
+          
+          // Special positioning for bubble 1: place it between zone 4 and zone 5
+          if (i === 0) {
+            // Calculate position between zone 4 and zone 5
+            const zone4X = zone1X + 3 * spacing; // Zone 4 position
+            const zone5X = zone1X + 4 * spacing; // Zone 5 position
+            bx = (zone4X + zone5X) / 2; // Center between zones
+            
+            // Debug logging for bubble 1 positioning
+            if (DEBUG_SCROLL) {
+              console.log(`Bubble 1 positioning: zone4X=${zone4X}, zone5X=${zone5X}, bx=${bx}, isMobile=${isMobile}`);
             }
           }
-        });
-      }, [], totalBarDuration);
+          
+          return { bx, by };
+        }
+        return { bx: 0, by: 0 };
+      });
+      
+      // Create bubbles at their final positions
+      const bubbles = fixedIdx.map((idx, i) => {
+        const pos = bubblePositions[i];
+        return addBubbleAtBar(Math.max(0, Math.min(totalBars - 1, idx)), i + 1, pos.bx, pos.by);
+      });
+      bubbles.forEach((b) => { if (b) gsap.set(b, { opacity: 0 }); });
       
       // Fade in bubbles at the same time as the last batch of bars finish
       // Calculate duration so bubbles finish fading in when bars finish animating

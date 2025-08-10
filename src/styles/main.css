@@ -262,6 +262,16 @@ main { min-height: 100%; }
   .section--hero { height: 100dvh; }
 }
 
+/* Mobile-specific viewport height fixes */
+@media (max-width: 768px) {
+  @supports (height: 100dvh) {
+    .section--hero { 
+      height: 100dvh; 
+      min-height: 100dvh;
+    }
+  }
+}
+
 /* Mobile responsive tweaks */
 @media (max-width: 768px) {
   /* Ensure smooth scrolling on mobile */
@@ -274,6 +284,11 @@ main { min-height: 100%; }
     letter-spacing: 0.03em;
     line-height: 1.02;
     overflow: hidden; /* clip shimmer */
+    /* Prevent layout shifts on mobile */
+    position: relative;
+    z-index: 2;
+    transform: translateZ(0);
+    will-change: transform;
   }
   .site-logo-link {
     top: env(safe-area-inset-top);
@@ -285,18 +300,20 @@ main { min-height: 100%; }
     width: clamp(36px, 10vw, 64px);
   }
   .hero__portrait {
-    position: absolute; 
+    position: fixed; /* Use fixed positioning to prevent layout shifts on mobile */
     left: 0; /* Align to the left */
     bottom: 0; /* Align to bottom of the screen */
     width: 100%; /* Use the entire width of the screen */
     height: auto; /* Maintain aspect ratio */
-    max-height: 80%; /* Limit height to 70% of the viewport */
+    max-height: 80%; /* Limit height to 80% of the viewport */
     object-fit: cover; /* Cover the area */
     object-position: center; /* Center the image */
     opacity: 0.5; /* Keep subtle on mobile */
     z-index: 3; /* ensure above title and gradient on mobile too */
     filter: saturate(120%) contrast(110%); /* Remove drop-shadows to avoid overflow */
-    will-change: opacity; /* Optimize for opacity changes on mobile too */
+    will-change: opacity, transform; /* Optimize for opacity and transform changes on mobile */
+    /* Prevent any layout shifts */
+    transform: translateZ(0);
   }
   .hero__backdrop { inset: 0; } /* prevent backdrop overflow on mobile */
   .scroll-indicator { bottom: 1rem; }
@@ -306,6 +323,11 @@ main { min-height: 100%; }
     height: 100vh; /* Ensure consistent height on mobile */
     position: relative; /* Ensure stable positioning */
     transform: translateZ(0); /* Force hardware acceleration on mobile */
+    /* Prevent any layout shifts on mobile */
+    contain: layout style paint;
+    /* Ensure stable mobile layout */
+    min-height: 100vh;
+    box-sizing: border-box;
   }
 } 
 
