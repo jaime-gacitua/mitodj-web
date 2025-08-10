@@ -853,6 +853,27 @@
       container.appendChild(item);
     });
 
+    // Add spin-girl image after descriptions
+    const imageSection = document.createElement('div');
+    imageSection.style.cssText = `
+      margin-top: 30px;
+      text-align: center;
+    `;
+
+    const spinGirlImage = document.createElement('img');
+    spinGirlImage.src = '/images/spin-girl.png';
+    spinGirlImage.alt = 'Spinning girl illustration';
+    spinGirlImage.style.cssText = `
+      width: 200px;
+      height: auto;
+      max-width: 100%;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+      border-radius: 8px;
+    `;
+
+    imageSection.appendChild(spinGirlImage);
+    container.appendChild(imageSection);
+
     // Add YouTube video section
     const videoSection = document.createElement('div');
     videoSection.style.cssText = `
