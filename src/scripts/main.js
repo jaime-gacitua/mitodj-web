@@ -169,6 +169,8 @@
   // Scroll indicator subtle bounce
   gsap.to('.scroll-indicator .arrow', { y: 6, repeat: -1, yoyo: true, duration: 0.9, ease: 'sine.inOut' });
 
+
+
   // Generate Spinning Beats plot and table
   const beatsPlot = document.getElementById('beats-plot');
   if (beatsPlot) {
@@ -668,6 +670,9 @@
 
     // Add the description section below the plot
     addDescriptionSection(svgEl);
+    
+    // Add How section after the description section
+    addHowSection(svgEl);
   }
 
   function addDescriptionSection(svgEl) {
@@ -677,7 +682,7 @@
     container.style.cssText = `
       margin-top: 40px;
       padding: 30px;
-      background: rgba(255, 255, 255, 0.05);
+      background: #000000;
       border-radius: 16px;
       border: 1px solid rgba(255, 255, 255, 0.1);
       display: flex;
@@ -692,18 +697,18 @@
     const descriptions = [
       {
         number: 1,
-        title: 'Lead spinners into their <span style="color: #CB6EEB; font-weight: bold;">flow-state</span>',
-        text: 'Play the right energy with the right speed in each segment.'
+        title: '<span style="color: #CB6EEB; font-weight: bold;">Flow-state</span> Mastery',
+        text: 'Lock riders into their rhythm with the perfect beat and pace for every segment, guiding them seamlessly into their peak performance zone.'
       },
       {
         number: 2,
-        title: 'Inspire people\'s <span style="color: #CB6EEB; font-weight: bold;">120%</span>',
-        text: 'Match the music explosions with the red zones. Build towards a memorable grand finale.'
+        title: 'Ignite Their <span style="color: #CB6EEB; font-weight: bold;">120%</span>',
+        text: 'Sync explosive music drops with every red-zone push. Drive the room’s energy sky-high and end with a finale they’ll never forget.'
       },
       {
         number: 3,
-        title: 'Turn the class into an <span style="color: #CB6EEB; font-weight: bold;">epic journey</span>',
-        text: 'with themed courses like personal courage, women empowerment, or just 90s\' pop classics.'
+        title: 'Ride the <span style="color: #CB6EEB; font-weight: bold;">epic journey</span>',
+        text: 'Transform every class into an unforgettable quest — from battles of courage, to waves of empowerment, or pure 90s pop euphoria.'
       }
     ];
 
@@ -714,7 +719,7 @@
         align-items: flex-start;
         gap: 16px;
         padding: 20px;
-        background: rgba(255, 255, 255, 0.03);
+        background: #000000;
         border-radius: 12px;
         border: 1px solid rgba(255, 255, 255, 0.08);
         transition: all 0.3s ease;
@@ -814,7 +819,7 @@
         bubble.style.transform = 'scale(1)';
       });
       
-      // Auto-rotate every 3 seconds with offset for each bubble
+      // Auto-rotate every 3 seconds - all bubbles synchronized
       const rotationInterval = setInterval(() => {
         if (isFlipped) {
           frontSide.style.transform = 'rotateY(0deg)';
@@ -824,7 +829,7 @@
           backSide.style.transform = 'rotateY(0deg)';
         }
         isFlipped = !isFlipped;
-      }, 3000 + (index * 1000)); // 3 seconds + 1 second offset per bubble
+      }, 3000); // All bubbles flip every 3 seconds simultaneously
       
       // Store the interval for cleanup if needed
       bubble.dataset.rotationInterval = rotationInterval;
@@ -914,6 +919,186 @@
     const parent = svgEl.parentElement;
     if (parent) {
       parent.insertBefore(container, svgEl.nextSibling);
+    }
+  }
+
+  function addHowSection(svgEl) {
+    // Create container for the How section
+    const container = document.createElement('div');
+    container.className = 'how-section';
+    container.style.cssText = `
+      margin-top: 40px;
+      padding: 30px;
+      background: #000000;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    `;
+
+    // Create the How section content
+    container.innerHTML = `
+      <h2 style="
+        margin: 0 0 30px 0;
+        font-size: 24px;
+        font-weight: 700;
+        color: #ffffff;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+      ">How?</h2>
+      
+      <div style="display: grid; gap: 20px;">
+        <div style="
+          display: flex;
+          align-items: flex-start;
+          gap: 20px;
+          padding: 20px;
+          background: #000000;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          transition: all 0.3s ease;
+        ">
+          <span style="
+            font-size: 24px;
+            font-weight: 700;
+            color: #b36bff;
+            min-width: 40px;
+            text-align: center;
+            line-height: 1;
+          ">1/</span>
+          <div>
+            <h3 style="
+              margin: 0 0 8px 0;
+              font-size: 16px;
+              font-weight: 600;
+              color: #ffffff;
+            ">Submit your course plan</h3>
+            <p style="
+              margin: 0;
+              color: #9aa7b6;
+              font-size: 14px;
+              line-height: 1.5;
+            ">Send us your spin class plan with the workout segments and intensity levels.</p>
+          </div>
+        </div>
+        
+        <div style="
+          display: flex;
+          align-items: flex-start;
+          gap: 20px;
+          padding: 20px;
+          background: #000000;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          transition: all 0.3s ease;
+        ">
+          <span style="
+            font-size: 24px;
+            font-weight: 700;
+            color: #b36bff;
+            min-width: 40px;
+            text-align: center;
+            line-height: 1;
+          ">2/</span>
+          <div>
+            <h3 style="
+              margin: 0 0 8px 0;
+              font-size: 16px;
+              font-weight: 600;
+              color: #ffffff;
+            ">(Optional) Add your music picks</h3>
+            <p style="
+              margin: 0;
+              color: #9aa7b6;
+              font-size: 14px;
+              line-height: 1.5;
+            ">Share a playlist or song ideas to guide the vibe.</p>
+          </div>
+        </div>
+        
+        <div style="
+          display: flex;
+          align-items: flex-start;
+          gap: 20px;
+          padding: 20px;
+          background: #000000;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          transition: all 0.3s ease;
+        ">
+          <span style="
+            font-size: 24px;
+            font-weight: 700;
+            color: #b36bff;
+            min-width: 40px;
+            text-align: center;
+            line-height: 1;
+          ">3/</span>
+          <div>
+            <h3 style="
+              margin: 0 0 8px 0;
+              font-size: 16px;
+              font-weight: 600;
+              color: #ffffff;
+            ">Get your custom 45-minute mix</h3>
+            <p style="
+              margin: 0;
+              color: #9aa7b6;
+              font-size: 14px;
+              line-height: 1.5;
+            ">We deliver a precision-mixed track that matches every climb, sprint, and recovery.</p>
+          </div>
+        </div>
+        
+        <div style="
+          display: flex;
+          align-items: flex-start;
+          gap: 20px;
+          padding: 20px;
+          background: #000000;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          transition: all 0.3s ease;
+        ">
+          <span style="
+            font-size: 24px;
+            font-weight: 700;
+            color: #b36bff;
+            min-width: 40px;
+              text-align: center;
+              line-height: 1;
+          ">4/</span>
+          <div>
+            <h3 style="
+              margin: 0 0 8px 0;
+              font-size: 16px;
+              font-weight: 600;
+              color: #ffffff;
+            ">Stream it in your class</h3>
+            <p style="
+              margin: 0;
+              color: #9aa7b6;
+              font-size: 14px;
+              line-height: 1.5;
+            ">Play the full mix straight from the cloud — ready to ride.</p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Insert the How section after the description section
+    const parent = svgEl.parentElement;
+    if (parent) {
+      // Find the bubble-descriptions container and insert after it
+      const descriptionContainer = parent.querySelector('.bubble-descriptions');
+      if (descriptionContainer) {
+        parent.insertBefore(container, descriptionContainer.nextSibling);
+      } else {
+        // Fallback: insert after the SVG element
+        parent.insertBefore(container, svgEl.nextSibling);
+      }
     }
   }
 })(); 
