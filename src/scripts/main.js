@@ -342,6 +342,11 @@
     ];
     const zoneColors = ['#a2a9b3', '#6aa7ff', '#3df06a', '#fff661', '#ff2a2a'];
     const zoneTexts = [];
+    let zoneCardsContainer = null; // For mobile HTML cards
+
+    // Mobile: render cards instead of SVG text labels
+    const isMobileForLabels = window.matchMedia('(max-width: 640px)').matches;
+
     // Create labels equally spaced from left of first bar; keep Zone 1 position, reduce spacing for others
     const labelsY = (baselineY - barMaxHeight) - 6; // raised above bars
     const firstFiveBars = barNodes.slice(0, 5);
@@ -354,21 +359,66 @@
     // Reduce spacing versus full span
     const avgGap = totalSpan / Math.max(1, 5 - 1);
     const spacing = Math.max(36, Math.round(avgGap * 0.76));
-    for (let i = 0; i < 5; i += 1) {
-      const tx = i === 0 ? zone1X : zone1X + i * spacing;
-      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      // Set final position immediately; animation will only fade in
-      t.setAttribute('x', String(tx));
-      t.setAttribute('y', String(labelsY));
-      t.setAttribute('text-anchor', 'start');
-      t.setAttribute('dominant-baseline', 'alphabetic');
-      t.setAttribute('fill', zoneColors[i] || '#eaf1ff');
-      t.setAttribute('font-size', '20');
-      t.setAttribute('font-weight', '800');
-      t.setAttribute('opacity', '0');
-      t.textContent = zoneMessages[i];
-      svgEl.appendChild(t);
-      zoneTexts[i] = { node: t, tx, ty: labelsY };
+
+    if (!isMobileForLabels) {
+      for (let i = 0; i < 5; i += 1) {
+        const tx = i === 0 ? zone1X : zone1X + i * spacing;
+        const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        // Set final position immediately; animation will only fade in
+        t.setAttribute('x', String(tx));
+        t.setAttribute('y', String(labelsY));
+        t.setAttribute('text-anchor', 'start');
+        t.setAttribute('dominant-baseline', 'alphabetic');
+        t.setAttribute('fill', zoneColors[i] || '#eaf1ff');
+        t.setAttribute('font-size', '20');
+        t.setAttribute('font-weight', '800');
+        t.setAttribute('opacity', '0');
+        t.textContent = zoneMessages[i];
+        svgEl.appendChild(t);
+        zoneTexts[i] = { node: t, tx, ty: labelsY };
+      }
+    } else {
+      // Build HTML cards above the plot
+      const root = svgEl.parentElement; // .beats__root
+      if (root) {
+        // Remove any previous cards (defensive)
+        const prev = root.querySelector('.zone-cards');
+        if (prev) prev.remove();
+        const cards = document.createElement('div');
+        cards.className = 'zone-cards';
+        // Insert before the SVG
+        root.insertBefore(cards, svgEl);
+        zoneCardsContainer = cards;
+
+        function getTextColorForBg(hex) {
+          const h = hex.replace('#','');
+          const r = parseInt(h.substring(0,2),16);
+          const g = parseInt(h.substring(2,4),16);
+          const b = parseInt(h.substring(4,6),16);
+          // Perceived luminance
+          const l = 0.2126*r + 0.7152*g + 0.0722*b;
+          return l > 150 ? '#111822' : '#ffffff';
+        }
+
+        for (let i = 0; i < 5; i += 1) {
+          const color = zoneColors[i] || '#333';
+          const card = document.createElement('div');
+          card.className = `zone-card zone-card--${i+1}`;
+          card.style.background = color;
+          card.style.color = getTextColorForBg(color);
+          card.style.opacity = '0'; // start hidden; animate in via GSAP timeline
+          const title = document.createElement('div');
+          title.className = 'zone-card__title';
+          title.textContent = `Zone ${i+1}`;
+          const subtitle = document.createElement('div');
+          subtitle.className = 'zone-card__subtitle';
+          const percent = (zoneMessages[i] || '').split(':')[1]?.trim() || '';
+          subtitle.textContent = `${percent} FTP`;
+          card.appendChild(title);
+          card.appendChild(subtitle);
+          cards.appendChild(card);
+        }
+      }
     }
 
     // Scroll-triggered entrance: bars fly from edges then settle
@@ -384,27 +434,34 @@
 
       const sectionEl = document.getElementById('projects');
       const beatsContainer = document.querySelector('.beats');
+      const beatsRootEl = document.querySelector('.beats__root');
       const beatsTitle = document.getElementById('beats-title');
       const isMobile = window.matchMedia('(max-width: 640px)').matches;
-      // Unified, short-and-sweet scroll span (viewport-relative for all)
-      const unifiedEnd = Math.max(900, Math.round(window.innerHeight * 1.25));
+      // Compute a tight scroll span based on plot height to avoid wasted scrolling
+      const plotHeight = (beatsRootEl && beatsRootEl.getBoundingClientRect().height) || 600;
+      const unifiedEnd = Math.max(500, Math.round(plotHeight * (isMobile ? 1.0 : 0.85)));
       if (DEBUG_SCROLL) {
         console.table({ bars: barNodes.length, targetWidth, unifiedEnd, vh: window.innerHeight, isMobile });
       }
+      function updateStickyOffsets() {
+        const projectsTitle = document.getElementById('projects-title');
+        const beatsTitleEl = document.getElementById('beats-title');
+        const ph = projectsTitle ? projectsTitle.offsetHeight : 0;
+        const bh = beatsTitleEl ? beatsTitleEl.offsetHeight : 0;
+        document.documentElement.style.setProperty('--projects-sticky-offset', ph + 'px');
+        document.documentElement.style.setProperty('--beats-title-offset', bh + 'px');
+      }
+
+      updateStickyOffsets();
+      window.addEventListener('resize', updateStickyOffsets, { passive: true });
+
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: beatsTitle || sectionEl || svgEl, // start when "Spinning Beats" hits center
-          start: isMobile ? 'top 20%' : 'top 35%', // earlier trigger on mobile to prevent overlap
-          end: () => {
-            if (sectionEl) {
-              // Add extra spacing on mobile to prevent title overlap
-              const extraSpacing = isMobile ? 100 : 0;
-              sectionEl.style.minHeight = `calc(100vh + ${unifiedEnd + extraSpacing}px)`;
-            }
-            return '+=' + unifiedEnd;
-          },
+          start: isMobile ? 'top 10%' : 'bottom 10%', // earlier trigger on mobile to prevent overlap
+          end: () => '+=' + unifiedEnd,
           scrub: 0.5, // Increased for smoother scrolling
-          pin: beatsContainer || true,              // pin only the beats block; leave section title at top
+          pin: beatsRootEl || beatsContainer || true, // pin only the plot/root so titles can stay sticky
           pinSpacing: true,
           anticipatePin: isMobile ? 1 : 3,         // less anticipation on mobile
           invalidateOnRefresh: true,
@@ -418,6 +475,7 @@
               projectsTitle.style.top = isMobile ? 'env(safe-area-inset-top, 0)' : '0';
               projectsTitle.style.zIndex = '50';
             }
+            updateStickyOffsets();
           },
           onEnterBack: () => {
             document.body.classList.add('in-projects');
@@ -428,7 +486,9 @@
               projectsTitle.style.top = isMobile ? 'env(safe-area-inset-top, 0)' : '0';
               projectsTitle.style.zIndex = '50';
             }
+            updateStickyOffsets();
           },
+          onRefresh: () => { updateStickyOffsets(); },
           onLeave: () => document.body.classList.remove('in-projects'),
           onLeaveBack: () => document.body.classList.remove('in-projects'),
           onUpdate: DEBUG_SCROLL ? (self) => {
@@ -490,10 +550,17 @@
         ease: 'none'
       }, 0);
 
-      // Zone labels fade in as bars arrive
-      zoneTexts.forEach((tdata, i) => {
-        if (tdata) tl.to(tdata.node, { opacity: 1, duration: 0.2, ease: 'none' }, 0.1 + i * 0.02);
-      });
+      // Zone labels/cards fade in as bars arrive
+      if (zoneCardsContainer) {
+        const items = Array.from(zoneCardsContainer.children);
+        if (items.length) {
+          tl.to(items, { opacity: 1, y: 0, duration: 0.2, stagger: 0.05, ease: 'none' }, 0.1);
+        }
+      } else {
+        zoneTexts.forEach((tdata, i) => {
+          if (tdata) tl.to(tdata.node, { opacity: 1, duration: 0.2, ease: 'none' }, 0.1 + i * 0.02);
+        });
+      }
 
       // Add 3 non-interactive numbered bubbles (created now, faded in at the end)
       function addBubbleAtBar(barIdx, number, finalX = null, finalY = null) {
@@ -593,8 +660,7 @@
       const bubbleFadeDuration = 0.2 + (bubbles.filter(Boolean).length - 1) * 0.05; // Account for stagger
       tl.to(bubbles.filter(Boolean), { opacity: 1, duration: 0.2, stagger: 0.05, ease: 'power2.out' }, totalBarDuration - bubbleFadeDuration);
       
-      // Add a smooth transition at the end to prevent abrupt scrolling bounce
-      tl.to({}, { duration: 0.3, ease: 'power3.out' }, '+=0.1');
+      // Keep the end tight; avoid extra buffer animation to eliminate trailing scroll
 
       // After configuration, refresh ScrollTrigger to account for new pin spacing
       ScrollTrigger.refresh();

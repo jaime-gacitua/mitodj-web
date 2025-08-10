@@ -13,7 +13,8 @@
 * { box-sizing: border-box; }
 html, body { 
   height: 100%; 
-  scroll-behavior: smooth;
+  /* Disable smooth scrolling to avoid address-bar induced jumps on iOS */
+  scroll-behavior: auto;
 }
 
 body {
@@ -138,6 +139,29 @@ main { min-height: 100%; }
 .beats { margin-top: 0.5rem; }
 .beats h3 { margin: 0 0 0.5rem 0; font-size: clamp(1.2rem, 2.4vw, 1.6rem); }
 .beats__subtitle { color: var(--color-muted); margin: 0 0 clamp(2rem, 6vw, 4rem) 0; font-size: 0.95rem; }
+/* Highlighted blockquote for Truth statement */
+.beats__quote {
+  margin: 0 0 clamp(2rem, 6vw, 4rem) 0;
+  padding: 1rem 1.25rem;
+  background: #000; /* solid, not transparent */
+  border-left: 4px solid var(--color-accent);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: clamp(1rem, 2.6vw, 1.15rem);
+  line-height: 1.6;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+}
+
+.beats__quote-line { display: inline; }
+
+@media (max-width: 640px) {
+  .beats__quote {
+    line-height: 1.35;
+  }
+  .beats__quote-line { display: block; }
+  .beats__quote-line--2 { padding-left: 1.25rem; }
+  .beats__quote-line--3 { padding-left: 2.5rem; }
+}
 
 .beats__root { display: grid; gap: 1rem; justify-items: center; }
 .beats__svg { width: min(100%, 1200px); height: auto; display: block; margin-inline: auto; margin-top: clamp(8rem, 8vw, 10rem); }
@@ -178,6 +202,41 @@ main { min-height: 100%; }
 }
 
 .container { max-width: 1100px; margin: 0 auto; }
+
+/* Mobile Zone Cards (replace SVG labels) */
+.zone-cards {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  width: min(100%, 1200px);
+  margin: 0 auto;
+}
+.zone-card {
+  border-radius: 10px;
+  padding: 10px 8px;
+  text-align: center;
+  font-weight: 800;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+.zone-card__title {
+  font-size: 12px;
+  line-height: 1.1;
+}
+.zone-card__subtitle {
+  font-size: 12px;
+  opacity: 0.95;
+}
+
+@media (max-width: 640px) {
+  .zone-cards {
+    position: relative;
+    top: 8px;
+    padding-inline: 8px;
+  }
+  .beats__svg {
+    margin-top: 1.25rem; /* reduce gap since cards occupy space */
+  }
+}
 
 .section--projects h2 {
   font-size: clamp(1.6rem, 3.4vw, 3rem);
@@ -257,27 +316,41 @@ main { min-height: 100%; }
   .site-logo { animation: none; }
 } 
 
-/* Use dynamic viewport height when supported to avoid iOS safari chrome issues */
-@supports (height: 100dvh) {
-  .section--hero { height: 100dvh; }
+/* Prefer small viewport height to avoid jump when mobile chrome hides/shows */
+@supports (height: 100svh) {
+  .section--hero { height: 100svh; }
+}
+/* iOS Safari fallback when 100svh isn't available */
+@supports ((height: -webkit-fill-available) and (not (height: 100svh))) {
+  html { height: -webkit-fill-available; }
+  body { min-height: -webkit-fill-available; }
+  .section--hero { height: -webkit-fill-available; }
 }
 
 /* Mobile-specific viewport height fixes */
 @media (max-width: 768px) {
-  @supports (height: 100dvh) {
+  @supports (height: 100svh) {
     .section--hero { 
-      height: 100dvh; 
-      min-height: 100dvh;
+      height: 100svh; 
+      min-height: 100svh;
+    }
+  }
+  @supports ((height: -webkit-fill-available) and (not (height: 100svh))) {
+    html { height: -webkit-fill-available; }
+    body { min-height: -webkit-fill-available; }
+    .section--hero { 
+      height: -webkit-fill-available; 
+      min-height: -webkit-fill-available;
     }
   }
 }
 
 /* Mobile responsive tweaks */
 @media (max-width: 768px) {
-  /* Ensure smooth scrolling on mobile */
+  /* Ensure momentum scrolling on iOS; keep behavior auto to prevent jumps */
   html, body {
     -webkit-overflow-scrolling: touch; /* iOS momentum scrolling */
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
   }
   .hero__title {
     font-size: clamp(2rem, 12vw + 0.5rem, 4.6rem);
@@ -300,7 +373,7 @@ main { min-height: 100%; }
     width: clamp(36px, 10vw, 64px);
   }
   .hero__portrait {
-    position: fixed; /* Use fixed positioning to prevent layout shifts on mobile */
+    position: absolute; /* Anchor inside hero to avoid visual viewport jumps */
     left: 0; /* Align to the left */
     bottom: 0; /* Align to bottom of the screen */
     width: 100%; /* Use the entire width of the screen */
@@ -311,22 +384,15 @@ main { min-height: 100%; }
     opacity: 0.5; /* Keep subtle on mobile */
     z-index: 3; /* ensure above title and gradient on mobile too */
     filter: saturate(120%) contrast(110%); /* Remove drop-shadows to avoid overflow */
-    will-change: opacity, transform; /* Optimize for opacity and transform changes on mobile */
-    /* Prevent any layout shifts */
-    transform: translateZ(0);
+    will-change: opacity; /* Optimize for opacity changes on mobile */
   }
   .hero__backdrop { inset: 0; } /* prevent backdrop overflow on mobile */
   .scroll-indicator { bottom: 1rem; }
   .section--projects { padding: 3rem 1rem 4rem; }
   .section--hero { 
-    overflow: visible; /* Allow smooth scrolling on mobile */
-    height: 100vh; /* Ensure consistent height on mobile */
-    position: relative; /* Ensure stable positioning */
-    transform: translateZ(0); /* Force hardware acceleration on mobile */
-    /* Prevent any layout shifts on mobile */
-    contain: layout style paint;
-    /* Ensure stable mobile layout */
-    min-height: 100vh;
+    /* Keep content inside and avoid shifting when URL bar appears */
+    overflow: hidden; 
+    position: relative; 
     box-sizing: border-box;
   }
 } 
@@ -343,6 +409,24 @@ main { min-height: 100%; }
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   transition: all 0.3s ease;
   box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+}
+/* Sticky Spinning Beats title under Projects */
+#beats-title {
+  position: sticky;
+  top: calc(var(--projects-sticky-offset, 0px));
+  z-index: 40;
+  padding: 0.75rem 0 0.25rem;
+  background: #000; /* unify with projects area */
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.beats__quote {
+  position: sticky;
+  top: calc(var(--projects-sticky-offset, 0px) + var(--beats-title-offset, 0px));
+  z-index: 35;
+}
+
+@supports (top: env(safe-area-inset-top)) {
+  #beats-title { top: calc(var(--projects-sticky-offset, 0px)); }
 }
 @supports (top: env(safe-area-inset-top)) {
   #projects-title { top: env(safe-area-inset-top); }
