@@ -149,25 +149,42 @@
   // Build timeline
   const tl = gsap.timeline({ defaults: { ease: 'expo.out' } });
 
-  // Animate portrait subtle parallax fade
+  // Animate portrait with broken TV effect after 3 seconds
   if (portrait) {
-    tl.to(portrait, { opacity: 0.5, scale: 1, duration: 0.9, y: 0 }, 0.1);
-
-    // TV-style fade loop: visible 5s, glitch-out 0.6s, hidden 2s, glitch-in 0.6s, loop
-    const tv = gsap.timeline({ repeat: -1, repeatDelay: 0, defaults: { ease: 'power2.out' } });
-    tv.to(portrait, { opacity: 0.5, duration: 0.2 })         // ensure baseline visible
-      .to(portrait, { duration: 5.0 })                        // hold
-      // glitch-out burst
-      .to(portrait, { opacity: 0.35, filter: 'saturate(160%) contrast(130%) hue-rotate(8deg)', duration: 0.08, ease: 'power1.in' })
-      .to(portrait, { opacity: 0.05, filter: 'saturate(80%) contrast(140%) blur(1px)', duration: 0.1 }, '>-0.02')
-      .to(portrait, { opacity: 0.0, filter: 'saturate(60%) contrast(160%) blur(2px)', duration: 0.42, ease: 'power3.in' })
-      // stay off
-      .to(portrait, { duration: 2.0 })
-      // glitch-in burst
-      .to(portrait, { opacity: 0.18, filter: 'saturate(180%) contrast(130%) hue-rotate(-8deg)', duration: 0.1, ease: 'power1.out' })
-      .to(portrait, { opacity: 0.1, filter: 'saturate(120%) contrast(115%)', duration: 0.08 }, '>-0.02')
-      .to(portrait, { opacity: 0.5, filter: 'saturate(120%) contrast(110%)', duration: 0.42, ease: 'power3.out' })
-      .call(animateLetters); // re-run title animation on reappear
+    // Start with portrait hidden
+    gsap.set(portrait, { opacity: 0 });
+    
+    // Wait 3 seconds, then bring in portrait with broken TV effect
+    tl.to(portrait, { 
+      opacity: 0.5, 
+      scale: 1, 
+      duration: 0.9, 
+      y: 0,
+      delay: 3.0
+    })
+    .to(portrait, { 
+      opacity: 0.5, 
+      filter: 'saturate(160%) contrast(130%) hue-rotate(8deg)', 
+      duration: 0.08, 
+      ease: 'power1.in' 
+    }, '+=0.1')
+    .to(portrait, { 
+      opacity: 0.05, 
+      filter: 'saturate(80%) contrast(140%) blur(1px)', 
+      duration: 0.1 
+    }, '+=0.02')
+    .to(portrait, { 
+      opacity: 0.0, 
+      filter: 'saturate(60%) contrast(160%) blur(2px)', 
+      duration: 0.42, 
+      ease: 'power3.in' 
+    }, '+=0.1')
+    .to(portrait, { 
+      opacity: 0.5, 
+      filter: 'saturate(120%) contrast(110%)', 
+      duration: 0.8, 
+      ease: 'power3.out' 
+    }, '+=0.2');
   }
 
   // Run letters animation initially
@@ -473,8 +490,29 @@
         });
       }
 
-      // Clock fades in from bottom-left with the bars
+      // Clock fades in from bottom-left with the bars and animates throughout
       tl.fromTo(clockGroup, { opacity: 0 }, { opacity: 1, duration: 0.25, ease: 'none' }, 0);
+      
+      // Calculate total bar animation duration
+      const barCount = barNodes.length;
+      const numBatches = Math.ceil(barCount / batchSize);
+      const totalBarDuration = (numBatches - 1) * batchGap + 0.22; // batch delays + individual bar duration
+      
+      // Animate minute hand: full 360-degree rotation in the same time as bars
+      tl.to(minuteHand, { 
+        rotation: 360, 
+        svgOrigin: `${clockCx} ${clockCy}`,
+        duration: totalBarDuration,
+        ease: 'none'
+      }, 0);
+      
+      // Animate hour hand: move from 12 to 1 o'clock (30 degrees) in the same time as bars
+      tl.to(hourHand, { 
+        rotation: 30, 
+        svgOrigin: `${clockCx} ${clockCy}`,
+        duration: totalBarDuration,
+        ease: 'none'
+      }, 0);
 
       // Zone labels fade in as bars arrive
       zoneTexts.forEach((tdata, i) => {
@@ -552,18 +590,18 @@
     const descriptions = [
       {
         number: 1,
-        title: 'Lead spinners into their flow-state',
+        title: 'Lead spinners into their <span style="color: #CB6EEB; font-weight: bold;">flow-state</span>',
         text: 'Play the right energy with the right speed in each segment.'
       },
       {
         number: 2,
-        title: 'Inspire people\'s 120%',
-        text: 'Match the music explosions with the red zones! Build towards a memorable grand finale!'
+        title: 'Inspire people\'s <span style="color: #CB6EEB; font-weight: bold;">120%</span>',
+        text: 'Match the music explosions with the red zones. Build towards a memorable grand finale.'
       },
       {
         number: 3,
-        title: 'Turn the class into an epic journey',
-        text: 'with themed courses like personal courage, women empowerment, or just 90s\' pop classics!'
+        title: 'Turn the class into an <span style="color: #CB6EEB; font-weight: bold;">epic journey</span>',
+        text: 'with themed courses like personal courage, women empowerment, or just 90s\' pop classics.'
       }
     ];
 
@@ -612,7 +650,7 @@
         font-weight: 700;
         color: #ffffff;
       `;
-      title.textContent = desc.title;
+      title.innerHTML = desc.title;
 
       const text = document.createElement('p');
       text.style.cssText = `
