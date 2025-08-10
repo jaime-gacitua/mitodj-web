@@ -558,7 +558,36 @@
       const fixedIdx = [0, Math.floor(totalBars / 2), Math.max(0, totalBars - 1)];
       const bubbles = fixedIdx.map((idx, i) => addBubbleAtBar(Math.max(0, Math.min(totalBars - 1, idx)), i + 1));
       bubbles.forEach((b) => { if (b) gsap.set(b, { opacity: 0 }); });
-      tl.to(bubbles.filter(Boolean), { opacity: 1, duration: 0.2, stagger: 0.05, ease: 'none' }, '+=0.05');
+      
+      // Position bubbles after all bars have finished animating to their final positions
+      tl.call(() => {
+        bubbles.forEach((bubble, i) => {
+          if (bubble) {
+            const barIdx = fixedIdx[i];
+            const bar = barNodes[barIdx];
+            if (bar && bar.node) {
+              const bbox = bar.node.getBBox();
+              const bx = bbox.x + bbox.width / 2;
+              const by = Math.max(10, bbox.y - 24);
+              
+              // Update bubble position to match the bar's final position
+              const circle = bubble.querySelector('circle');
+              const text = bubble.querySelector('text');
+              if (circle) {
+                circle.setAttribute('cx', String(bx));
+                circle.setAttribute('cy', String(by));
+              }
+              if (text) {
+                text.setAttribute('x', String(bx));
+                text.setAttribute('y', String(by + 8));
+              }
+            }
+          }
+        });
+      }, [], totalBarDuration + 0.1);
+      
+      // Fade in bubbles after positioning
+      tl.to(bubbles.filter(Boolean), { opacity: 1, duration: 0.2, stagger: 0.05, ease: 'none' }, '+=0.1');
 
       // After configuration, refresh ScrollTrigger to account for new pin spacing
       ScrollTrigger.refresh();
