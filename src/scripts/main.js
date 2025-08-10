@@ -154,37 +154,13 @@
     // Start with portrait hidden
     gsap.set(portrait, { opacity: 0 });
     
-    // Wait 3 seconds, then bring in portrait with broken TV effect
+    // Wait for MITO DJ title animation to end, then fade in portrait
     tl.to(portrait, { 
       opacity: 0.5, 
-      scale: 1, 
-      duration: 0.9, 
-      y: 0,
-      delay: 3.0
-    })
-    .to(portrait, { 
-      opacity: 0.5, 
-      filter: 'saturate(160%) contrast(130%) hue-rotate(8deg)', 
-      duration: 0.08, 
-      ease: 'power1.in' 
-    }, '+=0.1')
-    .to(portrait, { 
-      opacity: 0.05, 
-      filter: 'saturate(80%) contrast(140%) blur(1px)', 
-      duration: 0.1 
-    }, '+=0.02')
-    .to(portrait, { 
-      opacity: 0.0, 
-      filter: 'saturate(60%) contrast(160%) blur(2px)', 
-      duration: 0.42, 
-      ease: 'power3.in' 
-    }, '+=0.1')
-    .to(portrait, { 
-      opacity: 0.5, 
-      filter: 'saturate(120%) contrast(110%)', 
       duration: 0.8, 
-      ease: 'power3.out' 
-    }, '+=0.2');
+      delay: 2.0,
+      ease: 'power2.out'
+    });
   }
 
   // Run letters animation initially
@@ -427,7 +403,7 @@
             }
             return '+=' + unifiedEnd;
           },
-          scrub: 0.25,
+          scrub: 0.5, // Increased for smoother scrolling
           pin: beatsContainer || true,              // pin only the beats block; leave section title at top
           pinSpacing: true,
           anticipatePin: isMobile ? 1 : 3,         // less anticipation on mobile
@@ -463,7 +439,7 @@
             }
           } : undefined
         },
-        defaults: { ease: 'none' }
+        defaults: { ease: 'power2.out' }
       });
 
       // Rotate labels to -45 degrees and fade them in place (no movement)
@@ -610,10 +586,15 @@
             }
           }
         });
-      }, [], totalBarDuration + 0.1);
+      }, [], totalBarDuration);
       
-      // Fade in bubbles after positioning
-      tl.to(bubbles.filter(Boolean), { opacity: 1, duration: 0.2, stagger: 0.05, ease: 'none' }, '+=0.1');
+      // Fade in bubbles at the same time as the last batch of bars finish
+      // Calculate duration so bubbles finish fading in when bars finish animating
+      const bubbleFadeDuration = 0.2 + (bubbles.filter(Boolean).length - 1) * 0.05; // Account for stagger
+      tl.to(bubbles.filter(Boolean), { opacity: 1, duration: 0.2, stagger: 0.05, ease: 'power2.out' }, totalBarDuration - bubbleFadeDuration);
+      
+      // Add a smooth transition at the end to prevent abrupt scrolling bounce
+      tl.to({}, { duration: 0.3, ease: 'power3.out' }, '+=0.1');
 
       // After configuration, refresh ScrollTrigger to account for new pin spacing
       ScrollTrigger.refresh();

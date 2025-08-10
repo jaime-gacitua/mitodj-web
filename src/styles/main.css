@@ -11,7 +11,10 @@
 }
 
 * { box-sizing: border-box; }
-html, body { height: 100%; }
+html, body { 
+  height: 100%; 
+  scroll-behavior: smooth;
+}
 
 body {
   margin: 0;
@@ -22,6 +25,8 @@ body {
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
   line-height: 1.6;
   overflow-x: hidden; /* prevent horizontal scrolling */
+  -webkit-font-smoothing: antialiased; /* Smooth text rendering on mobile */
+  -moz-osx-font-smoothing: grayscale;
 }
 
 main { min-height: 100%; }
@@ -32,7 +37,7 @@ main { min-height: 100%; }
 }
 
 .section--hero {
-  min-height: 100svh;
+  height: 100vh; /* Fixed height to prevent jumping */
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -58,7 +63,7 @@ main { min-height: 100%; }
 }
 
  .hero__portrait {
-  position: absolute; /* Changed to fixed to keep it at the bottom right */
+  position: absolute;
   right: 0;
   bottom: 0;
   transform: none;
@@ -72,6 +77,7 @@ main { min-height: 100%; }
   opacity: 0.7;
   z-index: 3; /* above gradient overlay and title */
   pointer-events: none;
+  will-change: opacity; /* Optimize for opacity changes only */
  }
 
 /* ensure title sits above the fade overlay */
@@ -253,11 +259,16 @@ main { min-height: 100%; }
 
 /* Use dynamic viewport height when supported to avoid iOS safari chrome issues */
 @supports (height: 100dvh) {
-  .section--hero { min-height: 100dvh; }
+  .section--hero { height: 100dvh; }
 }
 
 /* Mobile responsive tweaks */
 @media (max-width: 768px) {
+  /* Ensure smooth scrolling on mobile */
+  html, body {
+    -webkit-overflow-scrolling: touch; /* iOS momentum scrolling */
+    scroll-behavior: smooth;
+  }
   .hero__title {
     font-size: clamp(2rem, 12vw + 0.5rem, 4.6rem);
     letter-spacing: 0.03em;
@@ -279,17 +290,23 @@ main { min-height: 100%; }
     bottom: 0; /* Align to bottom of the screen */
     width: 100%; /* Use the entire width of the screen */
     height: auto; /* Maintain aspect ratio */
-    max-height: 70%; /* Limit height to 50% of the viewport */
+    max-height: 80%; /* Limit height to 70% of the viewport */
     object-fit: cover; /* Cover the area */
     object-position: center; /* Center the image */
     opacity: 0.5; /* Keep subtle on mobile */
     z-index: 3; /* ensure above title and gradient on mobile too */
     filter: saturate(120%) contrast(110%); /* Remove drop-shadows to avoid overflow */
+    will-change: opacity; /* Optimize for opacity changes on mobile too */
   }
   .hero__backdrop { inset: 0; } /* prevent backdrop overflow on mobile */
   .scroll-indicator { bottom: 1rem; }
   .section--projects { padding: 3rem 1rem 4rem; }
-  .section--hero { overflow: hidden; } /* contain wide effects */
+  .section--hero { 
+    overflow: visible; /* Allow smooth scrolling on mobile */
+    height: 100vh; /* Ensure consistent height on mobile */
+    position: relative; /* Ensure stable positioning */
+    transform: translateZ(0); /* Force hardware acceleration on mobile */
+  }
 } 
 
 /* Sticky Projects title so it stays at the top during pinned scroll */
