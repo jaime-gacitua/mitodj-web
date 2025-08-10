@@ -534,7 +534,14 @@
         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         circle.setAttribute('cx', String(bx));
         circle.setAttribute('cy', String(by));
-        circle.setAttribute('r', '24');
+        
+        // Mobile-specific bubble size adjustment
+        if (isMobile) {
+          circle.setAttribute('r', '36'); // Larger radius on mobile for bigger numbers
+        } else {
+          circle.setAttribute('r', '24'); // Original size on desktop
+        }
+        
         circle.setAttribute('fill', '#ffffff');
         circle.setAttribute('stroke', '#111822');
         circle.setAttribute('stroke-width', '3');
@@ -547,6 +554,12 @@
         num.setAttribute('fill', '#111822');
         num.setAttribute('font-size', '20');
         num.setAttribute('font-weight', '900');
+        
+        // Mobile-specific font size adjustment
+        if (isMobile) {
+          num.setAttribute('font-size', '40'); // Twice bigger on mobile
+        }
+        
         num.textContent = String(number);
         g.appendChild(num);
 
@@ -567,8 +580,21 @@
             const bar = barNodes[barIdx];
             if (bar && bar.node) {
               const bbox = bar.node.getBBox();
-              const bx = bbox.x + bbox.width / 2;
+              let bx = bbox.x + bbox.width / 2;
               const by = Math.max(10, bbox.y - 24);
+              
+              // Special positioning for bubble 1: place it between zone 4 and zone 5
+              if (i === 0) {
+                // Calculate position between zone 4 and zone 5
+                const zone4X = zone1X + 3 * spacing; // Zone 4 position
+                const zone5X = zone1X + 4 * spacing; // Zone 5 position
+                bx = (zone4X + zone5X) / 2; // Center between zones
+                
+                // Debug logging for bubble 1 positioning
+                if (DEBUG_SCROLL) {
+                  console.log(`Bubble 1 positioning: zone4X=${zone4X}, zone5X=${zone5X}, bx=${bx}, isMobile=${isMobile}`);
+                }
+              }
               
               // Update bubble position to match the bar's final position
               const circle = bubble.querySelector('circle');
@@ -639,7 +665,7 @@
       item.style.cssText = `
         display: flex;
         align-items: flex-start;
-        gap: 20px;
+        gap: 16px;
         padding: 20px;
         background: rgba(255, 255, 255, 0.03);
         border-radius: 12px;
@@ -647,23 +673,114 @@
         transition: all 0.3s ease;
       `;
 
-      // Create the bubble
+      // Create the turning coin effect container
       const bubble = document.createElement('div');
       bubble.style.cssText = `
-        width: 48px;
-        height: 48px;
+        width: 64px;
+        height: 64px;
         border-radius: 50%;
-        background: #ffffff;
-        border: 3px solid #111822;
+        background: #000000;
         display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
-        font-weight: 900;
-        font-size: 20px;
-        color: #111822;
+        overflow: hidden;
+        position: relative;
+        perspective: 1000px;
       `;
-      bubble.textContent = desc.number;
+      
+      // Create the front side (number)
+      const frontSide = document.createElement('div');
+      frontSide.style.cssText = `
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #ffffff;
+        border: 3px solid #111822;
+        border-radius: 50%;
+        color: #111822;
+        font-size: 24px;
+        font-weight: 900;
+        backface-visibility: hidden;
+        transition: transform 0.6s ease-in-out;
+      `;
+      frontSide.textContent = String(index + 1);
+      
+      // Create the back side (icon)
+      const backSide = document.createElement('div');
+      backSide.style.cssText = `
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #000000;
+        border-radius: 50%;
+        backface-visibility: hidden;
+        transform: rotateY(180deg);
+        transition: transform 0.6s ease-in-out;
+      `;
+      
+      // Create the icon inside the back side
+      const bubbleIcon = document.createElement('img');
+      bubbleIcon.style.cssText = `
+        width: 48px;
+        height: 48px;
+        object-fit: contain;
+        opacity: 0.9;
+      `;
+      
+      // Set icon source based on index
+      const iconSources = ['/images/icon1_flowstate.png', '/images/icon2_heart_energy.png', '/images/icon3_knight_journey.png'];
+      bubbleIcon.src = iconSources[index];
+      bubbleIcon.alt = `Icon ${index + 1}`;
+      
+      backSide.appendChild(bubbleIcon);
+      
+      // Add both sides to the bubble
+      bubble.appendChild(frontSide);
+      bubble.appendChild(backSide);
+      
+      // Add click event for turning coin effect
+      let isFlipped = false;
+      bubble.addEventListener('click', () => {
+        if (isFlipped) {
+          frontSide.style.transform = 'rotateY(0deg)';
+          backSide.style.transform = 'rotateY(180deg)';
+        } else {
+          frontSide.style.transform = 'rotateY(180deg)';
+          backSide.style.transform = 'rotateY(0deg)';
+        }
+        isFlipped = !isFlipped;
+      });
+      
+      // Add hover effect to indicate it's clickable
+      bubble.style.cursor = 'pointer';
+      bubble.addEventListener('mouseenter', () => {
+        bubble.style.transform = 'scale(1.05)';
+      });
+      bubble.addEventListener('mouseleave', () => {
+        bubble.style.transform = 'scale(1)';
+      });
+      
+      // Auto-rotate every 3 seconds with offset for each bubble
+      const rotationInterval = setInterval(() => {
+        if (isFlipped) {
+          frontSide.style.transform = 'rotateY(0deg)';
+          backSide.style.transform = 'rotateY(180deg)';
+        } else {
+          frontSide.style.transform = 'rotateY(180deg)';
+          backSide.style.transform = 'rotateY(0deg)';
+        }
+        isFlipped = !isFlipped;
+      }, 3000 + (index * 1000)); // 3 seconds + 1 second offset per bubble
+      
+      // Store the interval for cleanup if needed
+      bubble.dataset.rotationInterval = rotationInterval;
 
       // Create the text content
       const textContent = document.createElement('div');
