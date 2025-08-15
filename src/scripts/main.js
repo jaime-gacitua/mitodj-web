@@ -915,17 +915,17 @@
       ScrollTrigger.refresh();
     }
 
-    // Add the description section below the plot
-    addDescriptionSection(svgEl);
+    // Add the impact section below the plot
+    addImpactSection(svgEl);
     
-    // Add How section after the description section
+    // Add How section after the impact section
     addHowSection(svgEl);
   }
 
-  function addDescriptionSection(svgEl) {
-    // Create container for the description section
+  function addImpactSection(svgEl) {
+    // Create container for the impact section
     const container = document.createElement('div');
-    container.className = 'bubble-descriptions';
+    container.className = 'impact-section';
     container.style.cssText = `
       margin-top: 40px;
       padding: 30px;
@@ -939,6 +939,20 @@
       margin-left: auto;
       margin-right: auto;
     `;
+
+    // Create the Impact title
+    const impactTitle = document.createElement('h2');
+    impactTitle.style.cssText = `
+      margin: 0 0 30px 0;
+      font-size: 28px;
+      font-weight: 700;
+      color: #ffffff;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    `;
+    impactTitle.textContent = 'Impact';
+    container.appendChild(impactTitle);
 
     // Create the three description items
     const descriptions = [
@@ -1356,13 +1370,13 @@
       </div>
     `;
 
-    // Insert the How section after the description section
+    // Insert the How section after the impact section
     const parent = svgEl.parentElement;
     if (parent) {
-      // Find the bubble-descriptions container and insert after it
-      const descriptionContainer = parent.querySelector('.bubble-descriptions');
-      if (descriptionContainer) {
-        parent.insertBefore(container, descriptionContainer.nextSibling);
+      // Find the impact-section container and insert after it
+      const impactContainer = parent.querySelector('.impact-section');
+      if (impactContainer) {
+        parent.insertBefore(container, impactContainer.nextSibling);
       } else {
         // Fallback: insert after the SVG element
         parent.insertBefore(container, svgEl.nextSibling);
