@@ -171,6 +171,9 @@
 
 
 
+  // Add Why section before the beats plot
+  addWhySection();
+
   // Generate Spinning Beats plot and table
   const beatsPlot = document.getElementById('beats-plot');
   if (beatsPlot) {
@@ -213,6 +216,263 @@
     ];
 
     renderBeats(beatsPlot, segments);
+  }
+
+  function addWhySection() {
+    // Find the beats quote to insert the Why section after it
+    const beatsQuote = document.querySelector('.beats__quote');
+    if (!beatsQuote) return;
+
+    // Create container for the Why section
+    const container = document.createElement('div');
+    container.className = 'why-section';
+    container.style.cssText = `
+      margin: 40px auto 60px auto;
+      padding: 40px 30px;
+      background: #000000;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      max-width: 1000px;
+      width: calc(100% - 60px);
+      box-sizing: border-box;
+    `;
+
+    // Create the Why section title
+    const title = document.createElement('h2');
+    title.style.cssText = `
+      margin: 0 0 40px 0;
+      font-size: 28px;
+      font-weight: 700;
+      color: #ffffff;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    `;
+    title.textContent = 'Why?';
+    container.appendChild(title);
+
+    // Create the cards container
+    const cardsContainer = document.createElement('div');
+    cardsContainer.className = 'cards-container';
+    cardsContainer.style.cssText = `
+      display: grid;
+      gap: 24px;
+      grid-template-columns: repeat(3, 1fr);
+    `;
+    
+    // Add mobile-specific inline styles as backup
+    const mobileGridStyles = `
+      @media (max-width: 768px) {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 24px !important;
+        width: 100% !important;
+      }
+    `;
+    
+    if (!document.querySelector('#mobile-grid-styles')) {
+      const styleSheet = document.createElement('style');
+      styleSheet.id = 'mobile-grid-styles';
+      styleSheet.textContent = mobileGridStyles;
+      document.head.appendChild(styleSheet);
+    }
+
+    // Mobile responsive styles
+    const mobileStyles = `
+      @media (max-width: 768px) {
+        .why-section {
+          margin: 30px auto 50px auto !important;
+          padding: 30px 20px !important;
+          width: calc(100% - 32px) !important;
+          max-width: 500px !important;
+        }
+        .why-section .cards-container {
+          grid-template-columns: 1fr !important;
+          gap: 24px !important;
+          width: 100% !important;
+        }
+        .why-section .why-card {
+          padding: 28px 24px !important;
+          width: 100% !important;
+          max-width: none !important;
+          margin: 0 !important;
+        }
+        .why-section .why-card__icon {
+          width: 56px !important;
+          height: 56px !important;
+          margin-bottom: 24px !important;
+        }
+        .why-section .why-card__title {
+          font-size: 20px !important;
+          margin-bottom: 16px !important;
+        }
+        .why-section .why-card__text {
+          font-size: 16px !important;
+          line-height: 1.6 !important;
+          max-width: none !important;
+        }
+      }
+      
+      @media (max-width: 480px) {
+        .why-section {
+          margin: 20px auto 40px auto !important;
+          padding: 24px 16px !important;
+          width: calc(100% - 24px) !important;
+          max-width: 450px !important;
+        }
+        .why-section .why-card {
+          padding: 24px 20px !important;
+        }
+        .why-section .why-card__icon {
+          width: 48px !important;
+          height: 48px !important;
+          margin-bottom: 20px !important;
+        }
+        .why-section .why-card__title {
+          font-size: 18px !important;
+        }
+        .why-section .why-card__text {
+          font-size: 15px !important;
+        }
+      }
+    `;
+
+    // Add mobile styles to head
+    if (!document.querySelector('#why-section-styles')) {
+      const styleSheet = document.createElement('style');
+      styleSheet.id = 'why-section-styles';
+      styleSheet.textContent = mobileStyles;
+      document.head.appendChild(styleSheet);
+    }
+
+    // Create the three cards
+    const cards = [
+      {
+        title: 'Mismatch',
+        text: 'The workout changes pace, but the music falls flat.',
+        icon: '/images/01-mismatch.png'
+      },
+      {
+        title: 'Off-beat',
+        text: 'The cadence of the ride and the rhythm of the music don\'t align.',
+        icon: '/images/02-off-beat.png'
+      },
+      {
+        title: 'Distraction',
+        text: 'Coaches lose focus when juggling playlists instead of leading the class.',
+        icon: '/images/03-distraction.png'
+      }
+    ];
+
+    cards.forEach((card, index) => {
+      const cardElement = document.createElement('div');
+      cardElement.className = 'why-card';
+      cardElement.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 32px 24px;
+        background: #000000;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transition: all 0.3s ease;
+        cursor: pointer;
+      `;
+
+      // Add hover effects
+      cardElement.addEventListener('mouseenter', () => {
+        cardElement.style.transform = 'translateY(-4px)';
+        cardElement.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+        cardElement.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.4)';
+        
+        // Enhance icon on hover
+        const icon = cardElement.querySelector('.why-card__icon');
+        if (icon) {
+          icon.style.transform = 'scale(1.1) rotate(5deg)';
+          icon.style.boxShadow = '0 12px 32px rgba(255, 71, 87, 0.6), 0 0 20px rgba(255, 71, 87, 0.4)';
+        }
+      });
+
+      cardElement.addEventListener('mouseleave', () => {
+        cardElement.style.transform = 'translateY(0)';
+        cardElement.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+        cardElement.style.boxShadow = 'none';
+        
+        // Reset icon on hover out
+        const icon = cardElement.querySelector('.why-card__icon');
+        if (icon) {
+          icon.style.transform = 'scale(1) rotate(0deg)';
+          icon.style.boxShadow = '0 8px 24px rgba(255, 71, 87, 0.4)';
+        }
+      });
+
+      // Create icon container
+      const iconContainer = document.createElement('div');
+      iconContainer.className = 'why-card__icon';
+      iconContainer.style.cssText = `
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: #000000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        box-shadow: 0 8px 24px rgba(255, 71, 87, 0.4);
+        overflow: hidden;
+        position: relative;
+        transition: all 0.3s ease;
+      `;
+      
+      // Create image element
+      const iconImage = document.createElement('img');
+      iconImage.src = card.icon;
+      iconImage.alt = `${card.title} icon`;
+      iconImage.style.cssText = `
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+      `;
+      
+      iconContainer.appendChild(iconImage);
+
+      // Create title
+      const title = document.createElement('h3');
+      title.className = 'why-card__title';
+      title.style.cssText = `
+        margin: 0 0 12px 0;
+        font-size: 20px;
+        font-weight: 700;
+        color: #ffffff;
+        line-height: 1.2;
+      `;
+      title.textContent = card.title;
+
+      // Create text
+      const text = document.createElement('p');
+      text.className = 'why-card__text';
+      text.style.cssText = `
+        margin: 0;
+        font-size: 15px;
+        line-height: 1.5;
+        color: #a2a9b3;
+        max-width: 280px;
+      `;
+      text.textContent = card.text;
+
+      // Assemble card
+      cardElement.appendChild(iconContainer);
+      cardElement.appendChild(title);
+      cardElement.appendChild(text);
+      cardsContainer.appendChild(cardElement);
+    });
+
+    // Add cards to container
+    container.appendChild(cardsContainer);
+
+    // Insert the Why section after the beats quote
+    beatsQuote.parentElement.insertBefore(container, beatsQuote.nextSibling);
   }
 
   function renderBeats(svgEl, segments) {
@@ -459,8 +719,8 @@
 
       const tl = gsap.timeline({
         scrollTrigger: {
-          trigger: beatsTitle || sectionEl || svgEl, // start when "Spinning Beats" hits center
-          start: isMobile ? 'top 10%' : 'bottom 10%', // earlier trigger on mobile to prevent overlap
+          trigger: svgEl, // start when "Spinning Beats" hits center
+          start: isMobile ? 'top 40%' : 'top 50%', // earlier trigger on mobile to prevent overlap
           end: () => '+=' + unifiedEnd,
           scrub: 0.5, // Increased for smoother scrolling
           pin: beatsRootEl || beatsContainer || true, // pin only the plot/root so titles can stay sticky
