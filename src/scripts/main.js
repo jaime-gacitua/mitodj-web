@@ -174,9 +174,12 @@
   // Add Why section before the beats plot
   addWhySection();
 
+  // Add What section to encapsulate the segments animation
+  const whatSectionContainer = addWhatSection();
+
   // Generate Spinning Beats plot and table
   const beatsPlot = document.getElementById('beats-plot');
-  if (beatsPlot) {
+  if (beatsPlot && whatSectionContainer) {
     // Input in seconds
     const segments = [
       { id: 1, intensity: 1, seconds: 120 },
@@ -215,7 +218,66 @@
       { id: 34, intensity: 5, seconds: 60 },
     ];
 
+    // Move the beats plot into the What section
+    if (whatSectionContainer) {
+      whatSectionContainer.appendChild(beatsPlot);
+    }
     renderBeats(beatsPlot, segments);
+  }
+
+  function addWhatSection() {
+    // Find the beats section to insert the What section after the Why section
+    const whySection = document.querySelector('.why-section');
+    if (!whySection) return;
+
+    // Create container for the What section
+    const container = document.createElement('div');
+    container.className = 'what-section';
+    container.style.cssText = `
+      margin: 40px auto 60px auto;
+      padding: 40px 30px;
+      background: #000000;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      max-width: 1000px;
+      width: calc(100% - 60px);
+      box-sizing: border-box;
+    `;
+
+    // Create the What section title
+    const title = document.createElement('h2');
+    title.style.cssText = `
+      margin: 0 0 20px 0;
+      font-size: 28px;
+      font-weight: 700;
+      color: #ffffff;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    `;
+    title.textContent = 'What?';
+    container.appendChild(title);
+
+    // Create the What section subtitle
+    const subtitle = document.createElement('p');
+    subtitle.style.cssText = `
+      margin: 0 0 40px 0;
+      font-size: 18px;
+      line-height: 1.6;
+      color: #a2a9b3;
+      text-align: center;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    `;
+    subtitle.textContent = 'Precision-mixed music that matches the entire course plan.';
+    container.appendChild(subtitle);
+
+    // Insert the What section after the Why section
+    whySection.parentElement.insertBefore(container, whySection.nextSibling);
+
+    // Return the container for the animation to be added later
+    return container;
   }
 
   function addWhySection() {
@@ -280,7 +342,7 @@
     // Mobile responsive styles
     const mobileStyles = `
       @media (max-width: 768px) {
-        .why-section {
+        .why-section, .what-section {
           margin: 30px auto 50px auto !important;
           padding: 30px 20px !important;
           width: calc(100% - 32px) !important;
@@ -314,7 +376,7 @@
       }
       
       @media (max-width: 480px) {
-        .why-section {
+        .why-section, .what-section {
           margin: 20px auto 40px auto !important;
           padding: 24px 16px !important;
           width: calc(100% - 24px) !important;
@@ -719,8 +781,8 @@
 
       const tl = gsap.timeline({
         scrollTrigger: {
-          trigger: svgEl, // start when "Spinning Beats" hits center
-          start: isMobile ? 'top 40%' : 'top 50%', // earlier trigger on mobile to prevent overlap
+          trigger: document.querySelector('.what-section h2'), // start when "WHAT" title hits center
+          start: isMobile ? 'top 40%' : 'top 90%', // earlier trigger on mobile to prevent overlap
           end: () => '+=' + unifiedEnd,
           scrub: 0.5, // Increased for smoother scrolling
           pin: beatsRootEl || beatsContainer || true, // pin only the plot/root so titles can stay sticky
