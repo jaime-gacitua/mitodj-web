@@ -342,7 +342,7 @@
     // Mobile responsive styles
     const mobileStyles = `
       @media (max-width: 768px) {
-        .why-section, .what-section {
+        .why-section, .what-section, .results-section {
           margin: 30px auto 50px auto !important;
           padding: 30px 20px !important;
           width: calc(100% - 32px) !important;
@@ -373,10 +373,21 @@
           line-height: 1.6 !important;
           max-width: none !important;
         }
+        .zone-cards {
+          margin-top: 60px !important;
+          margin-bottom: 60px !important;
+        }
+        .beats__svg {
+          transform: scale(1.2) !important;
+          transform-origin: center !important;
+        }
+        .fire-icon, .water-icon, .herb-icon {
+          font-size: 96px !important;
+        }
       }
       
       @media (max-width: 480px) {
-        .why-section, .what-section {
+        .why-section, .what-section, .results-section {
           margin: 20px auto 40px auto !important;
           padding: 24px 16px !important;
           width: calc(100% - 24px) !important;
@@ -395,6 +406,17 @@
         }
         .why-section .why-card__text {
           font-size: 15px !important;
+        }
+        .zone-cards {
+          margin-top: 50px !important;
+          margin-bottom: 50px !important;
+        }
+        .beats__svg {
+          transform: scale(1.2) !important;
+          transform-origin: center !important;
+        }
+        .fire-icon, .water-icon, .herb-icon {
+          font-size: 96px !important;
         }
       }
     `;
@@ -587,6 +609,45 @@
       barNodes.push({ node: rect, x, y, intensity: s.intensity });
       x += w;
     }
+
+    // Add animated logo that jumps from bar to bar
+    const logoGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    logoGroup.setAttribute('class', 'logo-animation');
+    svgEl.appendChild(logoGroup);
+
+    // Create the trail path first (lower z-index)
+    const trailPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    trailPath.setAttribute('fill', 'none');
+    trailPath.setAttribute('stroke', '#b36bff');
+    trailPath.setAttribute('stroke-width', '3');
+    trailPath.setAttribute('stroke-linecap', 'round');
+    trailPath.setAttribute('stroke-linejoin', 'round');
+    trailPath.setAttribute('opacity', '0.8');
+    trailPath.setAttribute('stroke-dasharray', '0 1000');
+    trailPath.setAttribute('stroke-dashoffset', '0');
+    logoGroup.appendChild(trailPath);
+
+    // Create the logo image after trail (higher z-index)
+    const logoImage = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+    logoImage.setAttribute('href', '/images/logo-mito-dj-sin-fondo.png');
+    logoImage.setAttribute('x', '0');
+    logoImage.setAttribute('y', '0');
+    logoImage.setAttribute('width', '64');
+    logoImage.setAttribute('height', '64');
+    logoImage.setAttribute('opacity', '0');
+    logoGroup.appendChild(logoImage);
+
+    // Add fire icon on the 13th bar
+    const fireIcon = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    fireIcon.setAttribute('x', '0');
+    fireIcon.setAttribute('y', '0');
+    fireIcon.setAttribute('font-size', '48');
+    fireIcon.setAttribute('text-anchor', 'middle');
+    fireIcon.setAttribute('dominant-baseline', 'middle');
+    fireIcon.setAttribute('opacity', '0');
+    fireIcon.setAttribute('class', 'fire-icon');
+    fireIcon.textContent = '🔥';
+    logoGroup.appendChild(fireIcon);
 
     // (Alternate version without progress overlay)
 
@@ -782,8 +843,8 @@
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: document.querySelector('.what-section h2'), // start when "WHAT" title hits center
-          start: isMobile ? 'top 40%' : 'top 90%', // earlier trigger on mobile to prevent overlap
-          end: () => '+=' + unifiedEnd,
+          start: isMobile ? 'top 50%' : 'top 50%', // earlier trigger on mobile to prevent overlap
+          end: isMobile ? 'top 15%' : 'top 30%', // end when WHAT section reaches 30% from top
           scrub: 0.5, // Increased for smoother scrolling
           pin: beatsRootEl || beatsContainer || true, // pin only the plot/root so titles can stay sticky
           pinSpacing: true,
@@ -833,46 +894,205 @@
         }
       });
 
-      // Unified bar animation: fly from bottom-center in batches of 10
+      // Unified bar animation: all bars appear in single batch
       const centerX = Math.round(leftEdge + targetWidth / 2);
-      const batchSize = 10;
-      const batchGap = 0.05; // delay between batches
       const fromY = baselineY + Math.round(barMaxHeight * 1.5);
-      for (let i = 0; i < barNodes.length; i += batchSize) {
-        const batch = barNodes.slice(i, i + batchSize);
-        const batchStart = (i / batchSize) * batchGap;
-        batch.forEach((b) => {
-          tl.fromTo(b.node,
-            { attr: { x: centerX, y: fromY }, opacity: 0 },
-            { attr: { x: b.x, y: b.y }, opacity: 1, duration: 0.22 },
-            batchStart
-          );
-        });
-      }
+      
+      // All bars appear simultaneously
+      barNodes.forEach((b) => {
+        tl.fromTo(b.node,
+          { attr: { x: centerX, y: fromY }, opacity: 0 },
+          { attr: { x: b.x, y: b.y }, opacity: 1, duration: 0.3 },
+          0 // All bars start at same time
+        );
+      });
 
       // Clock fades in from bottom-left with the bars and animates throughout
       tl.fromTo(clockGroup, { opacity: 0 }, { opacity: 1, duration: 0.25, ease: 'none' }, 0);
       
-      // Calculate total bar animation duration
-      const barCount = barNodes.length;
-      const numBatches = Math.ceil(barCount / batchSize);
-      const totalBarDuration = (numBatches - 1) * batchGap + 0.22; // batch delays + individual bar duration
+      // Calculate total bar animation duration (bars appear quickly, then clock/logo animate)
+      const barAppearDuration = 0.3; // Bars appear in 0.3 seconds
+      const clockLogoDuration = 1.2; // Clock and logo animate over 1.2 seconds
+      const totalBarDuration = barAppearDuration + clockLogoDuration; // Total duration
       
-      // Animate minute hand: full 360-degree rotation in the same time as bars
+      // Animate minute hand: full 360-degree rotation after bars appear
       tl.to(minuteHand, { 
         rotation: 360, 
         svgOrigin: `${clockCx} ${clockCy}`,
-        duration: totalBarDuration,
+        duration: clockLogoDuration,
         ease: 'none'
-      }, 0);
+      }, barAppearDuration);
       
-      // Animate hour hand: move from 12 to 1 o'clock (30 degrees) in the same time as bars
+      // Animate hour hand: move from 12 to 1 o'clock (30 degrees) after bars appear
       tl.to(hourHand, { 
         rotation: 30, 
         svgOrigin: `${clockCx} ${clockCy}`,
-        duration: totalBarDuration,
+        duration: clockLogoDuration,
         ease: 'none'
-      }, 0);
+      }, barAppearDuration);
+
+      // Animate logo jumping from bar to bar in parallel with clock
+      const logoJumpDuration = clockLogoDuration; // Same duration as clock animation
+      
+      // Start logo at first bar after bars appear
+      tl.set(logoImage, { 
+        x: barNodes[0].x + barNodes[0].node.getAttribute('width') / 2 - 32, 
+        y: barNodes[0].y - 64,
+        opacity: 1 
+      }, barAppearDuration);
+      
+      // Create keyframe animations for logo to follow bar heights
+      const logoKeyframes = barNodes.map((bar, index) => {
+        const barCenterX = bar.x + Number(bar.node.getAttribute('width')) / 2 - 32;
+        const barTopY = bar.y - 64;
+        const keyframeTime = (index / (barNodes.length - 1)) * clockLogoDuration;
+        return { x: barCenterX, y: barTopY, time: keyframeTime };
+      });
+
+      // Build the trail path data - single continuous path
+      const pathData = logoKeyframes.map((keyframe, index) => {
+        if (index === 0) return `M ${keyframe.x + 32} ${keyframe.y + 32}`;
+        return `L ${keyframe.x + 32} ${keyframe.y + 32}`;
+      }).join(' ');
+      trailPath.setAttribute('d', pathData);
+
+      // Set initial trail state - completely hidden
+      trailPath.setAttribute('stroke-dasharray', '0 1000');
+
+      // Animate the trail to appear progressively from left to right
+      tl.to(trailPath, {
+        'stroke-dasharray': '1000 0',
+        duration: clockLogoDuration,
+        ease: 'none'
+      }, barAppearDuration);
+
+      // Animate logo through each keyframe after bars appear
+      logoKeyframes.forEach((keyframe, index) => {
+        if (index > 0) { // Skip first keyframe (starting position)
+          tl.to(logoImage, {
+            x: keyframe.x,
+            y: keyframe.y,
+            duration: keyframe.time - logoKeyframes[index - 1].time,
+            ease: 'none'
+          }, barAppearDuration + logoKeyframes[index - 1].time);
+        }
+      });
+
+      // Position and animate fire icon on the 15th bar
+      const fireBarIndex = 14; // 15th bar (0-indexed)
+      if (barNodes[fireBarIndex]) {
+        const fireBar = barNodes[fireBarIndex];
+        const fireX = fireBar.x + Number(fireBar.node.getAttribute('width')) / 2; // Center on bar
+        const fireY = fireBar.y ; // Closer to the bar
+        
+        // Position fire icon
+        fireIcon.setAttribute('x', fireX);
+        fireIcon.setAttribute('y', fireY);
+        
+        // Fade in fire icon when logo reaches that bar
+        const fireFadeTime = barAppearDuration + (fireBarIndex / (barNodes.length - 1)) * clockLogoDuration;
+        tl.to(fireIcon, {
+          opacity: 1,
+          duration: 0.5,
+          ease: 'power2.out'
+        }, fireFadeTime);
+      }
+
+      // Add water droplet icon on the 26th bar for calm segments
+      const waterIcon = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      waterIcon.setAttribute('x', '0');
+      waterIcon.setAttribute('y', '0');
+      waterIcon.setAttribute('font-size', '48');
+      waterIcon.setAttribute('text-anchor', 'middle');
+      waterIcon.setAttribute('dominant-baseline', 'middle');
+      waterIcon.setAttribute('opacity', '0');
+      waterIcon.setAttribute('class', 'water-icon');
+      waterIcon.textContent = '💧';
+      logoGroup.appendChild(waterIcon);
+
+      // Add herb icon on the 27th bar for calm segments
+      const herbIcon = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      herbIcon.setAttribute('x', '0');
+      herbIcon.setAttribute('y', '0');
+      herbIcon.setAttribute('font-size', '48');
+      herbIcon.setAttribute('text-anchor', 'middle');
+      herbIcon.setAttribute('dominant-baseline', 'middle');
+      herbIcon.setAttribute('opacity', '0');
+      herbIcon.setAttribute('class', 'herb-icon');
+      herbIcon.textContent = '🌿';
+      logoGroup.appendChild(herbIcon);
+
+      // Position and animate water droplet icon on the 26th bar
+      const waterBarIndex = 25; // 26th bar (0-indexed)
+      if (barNodes[waterBarIndex]) {
+        const waterBar = barNodes[waterBarIndex];
+        const waterX = waterBar.x + Number(waterBar.node.getAttribute('width')) / 2; // Center on bar
+        const waterY = waterBar.y; // On the bar
+        
+        // Position water icon
+        waterIcon.setAttribute('x', waterX);
+        waterIcon.setAttribute('y', waterY);
+        
+        // Fade in water icon when logo reaches that bar
+        const waterFadeTime = barAppearDuration + (waterBarIndex / (barNodes.length - 1)) * clockLogoDuration;
+        tl.to(waterIcon, {
+          opacity: 1,
+          duration: 0.5,
+          ease: 'power2.out'
+        }, waterFadeTime);
+      }
+
+      // Position and animate herb icon on the 27th bar
+      const herbBarIndex = 26; // 27th bar (0-indexed)
+      if (barNodes[herbBarIndex]) {
+        const herbBar = barNodes[herbBarIndex];
+        const herbX = herbBar.x + Number(herbBar.node.getAttribute('width')) / 2; // Center on bar
+        const herbY = herbBar.y; // On the bar
+        
+        // Position herb icon
+        herbIcon.setAttribute('x', herbX);
+        herbIcon.setAttribute('y', herbY);
+        
+        // Fade in herb icon when logo reaches that bar
+        const herbFadeTime = barAppearDuration + (herbBarIndex / (barNodes.length - 1)) * clockLogoDuration;
+        tl.to(herbIcon, {
+          opacity: 1,
+          duration: 0.5,
+          ease: 'power2.out'
+        }, herbFadeTime);
+      }
+
+      // Add trophy emoji at the bottom right of the last bar
+      const trophyIcon = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      trophyIcon.setAttribute('x', '0');
+      trophyIcon.setAttribute('y', '0');
+      trophyIcon.setAttribute('font-size', '48');
+      trophyIcon.setAttribute('text-anchor', 'end');
+      trophyIcon.setAttribute('dominant-baseline', 'middle');
+      trophyIcon.setAttribute('opacity', '0');
+      trophyIcon.setAttribute('class', 'trophy-icon');
+      trophyIcon.textContent = '🏆';
+      logoGroup.appendChild(trophyIcon);
+
+      // Position and animate trophy icon on the last bar
+      const lastBarIndex = barNodes.length - 1;
+      if (barNodes[lastBarIndex]) {
+        const lastBar = barNodes[lastBarIndex];
+        const trophyX = lastBar.x + Number(lastBar.node.getAttribute('width')) * 2; // Right edge of last bar
+        const trophyY = baselineY; // on the baseline
+        
+        // Position trophy icon
+        trophyIcon.setAttribute('x', trophyX);
+        trophyIcon.setAttribute('y', trophyY);
+        
+        // Fade in trophy icon when logo reaches the last bar
+        const trophyFadeTime = barAppearDuration + (lastBarIndex / (barNodes.length - 1)) * clockLogoDuration;
+        tl.to(trophyIcon, {
+          opacity: 1,
+          duration: 0.5,
+          ease: 'power2.out'
+        }, trophyFadeTime);
+      }
 
       // Zone labels/cards fade in as bars arrive
       if (zoneCardsContainer) {
@@ -886,108 +1106,20 @@
         });
       }
 
-      // Add 3 non-interactive numbered bubbles (created now, faded in at the end)
-      function addBubbleAtBar(barIdx, number, finalX = null, finalY = null) {
-        const b = barNodes[barIdx];
-        if (!b) return null;
-        
-        let bx, by;
-        if (finalX !== null && finalY !== null) {
-          // Use the provided final position
-          bx = finalX;
-          by = finalY;
-        } else {
-          // Fallback to bar-based positioning
-          const bbox = b.node.getBBox();
-          bx = bbox.x + bbox.width / 2;
-          by = Math.max(10, bbox.y - 24);
-        }
-
-        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        g.setAttribute('class', 'note-bubble');
-        g.setAttribute('opacity', '0');
-
-        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        circle.setAttribute('cx', String(bx));
-        circle.setAttribute('cy', String(by));
-        
-        // Mobile-specific bubble size adjustment
-        if (isMobile) {
-          circle.setAttribute('r', '36'); // Larger radius on mobile for bigger numbers
-        } else {
-          circle.setAttribute('r', '24'); // Original size on desktop
-        }
-        
-        circle.setAttribute('fill', '#ffffff');
-        circle.setAttribute('stroke', '#111822');
-        circle.setAttribute('stroke-width', '3');
-        g.appendChild(circle);
-
-        const num = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        num.setAttribute('x', String(bx));
-        num.setAttribute('y', String(by + 8));
-        num.setAttribute('text-anchor', 'middle');
-        num.setAttribute('fill', '#111822');
-        num.setAttribute('font-size', '20');
-        num.setAttribute('font-weight', '900');
-        
-        // Mobile-specific font size adjustment
-        if (isMobile) {
-          num.setAttribute('font-size', '40'); // Twice bigger on mobile
-        }
-        
-        num.textContent = String(number);
-        g.appendChild(num);
-
-        svgEl.appendChild(g);
-        return g;
-      }
-      // Create bubbles now, positioned at their final locations from the start
-      const totalBars = barNodes.length;
-      const fixedIdx = [6, Math.floor(totalBars / 2), Math.max(0, totalBars - 1)]; // Bubble 1 at 7th bar (index 6)
-      
-      // Calculate final positions for bubbles before creating them
-      const bubblePositions = fixedIdx.map((idx, i) => {
-        const bar = barNodes[Math.max(0, Math.min(totalBars - 1, idx))];
-        if (bar && bar.node) {
-          const bbox = bar.node.getBBox();
-          const bx = bbox.x + bbox.width / 2;
-          const by = Math.max(10, bbox.y - 24);
-          
-          return { bx, by };
-        }
-        return { bx: 0, by: 0 };
-      });
-      
-      // Create bubbles at their final positions
-      const bubbles = fixedIdx.map((idx, i) => {
-        const pos = bubblePositions[i];
-        return addBubbleAtBar(Math.max(0, Math.min(totalBars - 1, idx)), i + 1, pos.bx, pos.by);
-      });
-      bubbles.forEach((b) => { if (b) gsap.set(b, { opacity: 0 }); });
-      
-      // Fade in bubbles at the same time as the last batch of bars finish
-      // Calculate duration so bubbles finish fading in when bars finish animating
-      const bubbleFadeDuration = 0.2 + (bubbles.filter(Boolean).length - 1) * 0.05; // Account for stagger
-      tl.to(bubbles.filter(Boolean), { opacity: 1, duration: 0.2, stagger: 0.05, ease: 'power2.out' }, totalBarDuration - bubbleFadeDuration);
-      
       // Keep the end tight; avoid extra buffer animation to eliminate trailing scroll
 
       // After configuration, refresh ScrollTrigger to account for new pin spacing
       ScrollTrigger.refresh();
     }
 
-    // Add the impact section below the plot
-    addImpactSection(svgEl);
-    
-    // Add How section after the impact section
-    addHowSection(svgEl);
+    // Add the results section below the plot
+    addResultsSection(svgEl);
   }
 
-  function addImpactSection(svgEl) {
-    // Create container for the impact section
+  function addResultsSection(svgEl) {
+    // Create container for the results section
     const container = document.createElement('div');
-    container.className = 'impact-section';
+    container.className = 'results-section';
     container.style.cssText = `
       margin-top: 40px;
       padding: 30px;
@@ -1002,9 +1134,9 @@
       margin-right: auto;
     `;
 
-    // Create the Impact title
-    const impactTitle = document.createElement('h2');
-    impactTitle.style.cssText = `
+    // Create the Results title
+    const resultsTitle = document.createElement('h2');
+    resultsTitle.style.cssText = `
       margin: 0 0 30px 0;
       font-size: 28px;
       font-weight: 700;
@@ -1013,8 +1145,8 @@
       text-transform: uppercase;
       letter-spacing: 0.02em;
     `;
-    impactTitle.textContent = 'Impact';
-    container.appendChild(impactTitle);
+    resultsTitle.textContent = 'Results';
+    container.appendChild(resultsTitle);
 
     // Create the three description items
     const descriptions = [
@@ -1210,23 +1342,49 @@
     imageSection.appendChild(spinGirlImage);
     container.appendChild(imageSection);
 
-    // Add YouTube video section
-    const videoSection = document.createElement('div');
-    videoSection.style.cssText = `
-      margin-top: 30px;
+            // Insert the container after the WHAT section (not inside it)
+    const whatSection = document.querySelector('.what-section');
+    if (whatSection) {
+      whatSection.parentElement.insertBefore(container, whatSection.nextSibling);
+    }
+    
+    // Add See Demo section after the results section (same level)
+    addSeeDemoSection();
+    
+    // Add How section after the see demo section (same level)
+    addHowSection();
+  }
+
+  function addSeeDemoSection() {
+    // Create container for the See Demo section
+    const container = document.createElement('div');
+    container.className = 'see-demo-section';
+    container.style.cssText = `
+      margin: 40px auto 60px auto;
+      padding: 40px 30px;
+      background: #000000;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      max-width: 1000px;
+      width: calc(100% - 60px);
+      box-sizing: border-box;
       text-align: center;
     `;
 
-    const videoTitle = document.createElement('h3');
-    videoTitle.style.cssText = `
-      margin: 0 0 20px 0;
-      font-size: 20px;
+    // Create the See Demo title
+    const title = document.createElement('h2');
+    title.style.cssText = `
+      margin: 0 0 30px 0;
+      font-size: 28px;
       font-weight: 700;
       color: #ffffff;
       text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
     `;
-    videoTitle.textContent = 'See Demo';
-
+    title.textContent = 'See Demo';
+    container.appendChild(title);
+    
     const videoContainer = document.createElement('div');
     videoContainer.style.cssText = `
       position: relative;
@@ -1255,18 +1413,19 @@
     iframe.setAttribute('allowfullscreen', '');
 
     videoContainer.appendChild(iframe);
-    videoSection.appendChild(videoTitle);
-    videoSection.appendChild(videoContainer);
-    container.appendChild(videoSection);
+    container.appendChild(videoContainer);
 
-    // Insert the container after the SVG element
-    const parent = svgEl.parentElement;
+    // Insert after the results section (same level)
+    const parent = document.querySelector('.results-section')?.parentElement;
     if (parent) {
-      parent.insertBefore(container, svgEl.nextSibling);
+      const resultsContainer = parent.querySelector('.results-section');
+      if (resultsContainer) {
+        parent.insertBefore(container, resultsContainer.nextSibling);
+      }
     }
   }
 
-  function addHowSection(svgEl) {
+  function addHowSection() {
     // Create container for the How section
     const container = document.createElement('div');
     container.className = 'how-section';
@@ -1432,16 +1591,12 @@
       </div>
     `;
 
-    // Insert the How section after the impact section
-    const parent = svgEl.parentElement;
+    // Insert after the see-demo section (same level)
+    const parent = document.querySelector('.see-demo-section')?.parentElement;
     if (parent) {
-      // Find the impact-section container and insert after it
-      const impactContainer = parent.querySelector('.impact-section');
-      if (impactContainer) {
-        parent.insertBefore(container, impactContainer.nextSibling);
-      } else {
-        // Fallback: insert after the SVG element
-        parent.insertBefore(container, svgEl.nextSibling);
+      const seeDemoContainer = parent.querySelector('.see-demo-section');
+      if (seeDemoContainer) {
+        parent.insertBefore(container, seeDemoContainer.nextSibling);
       }
     }
   }
