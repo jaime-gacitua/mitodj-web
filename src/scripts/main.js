@@ -843,8 +843,8 @@
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: document.querySelector('.what-section h2'), // start when "WHAT" title hits center
-          start: isMobile ? 'top 50%' : 'top 50%', // earlier trigger on mobile to prevent overlap
-          end: isMobile ? 'top 15%' : 'top 30%', // end when WHAT section reaches 30% from top
+          start: isMobile ? 'top 50%' : 'top 55%',
+          end: isMobile ? 'top 15%' : 'top 35%', // end when WHAT section reaches 30% from top
           scrub: 0.5, // Increased for smoother scrolling
           pin: beatsRootEl || beatsContainer || true, // pin only the plot/root so titles can stay sticky
           pinSpacing: true,
