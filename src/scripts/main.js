@@ -1337,6 +1337,10 @@
       max-width: 100%;
       filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
       border-radius: 8px;
+      box-shadow: 
+        0 0 20px rgba(179, 107, 255, 0.6),
+        0 0 40px rgba(179, 107, 255, 0.4),
+        0 0 60px rgba(179, 107, 255, 0.2);
     `;
 
     imageSection.appendChild(spinGirlImage);
@@ -1398,7 +1402,7 @@
     `;
 
     const iframe = document.createElement('iframe');
-    iframe.src = 'https://www.youtube.com/embed/ROaMPcNN5mE';
+    iframe.src = 'https://www.youtube.com/embed/ROaMPcNN5mE?rel=0&modestbranding=1&disablekb=1';
     iframe.style.cssText = `
       position: absolute;
       top: 0;
@@ -1411,6 +1415,7 @@
     iframe.setAttribute('frameborder', '0');
     iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
     iframe.setAttribute('allowfullscreen', '');
+    iframe.setAttribute('loading', 'lazy');
 
     videoContainer.appendChild(iframe);
     container.appendChild(videoContainer);
