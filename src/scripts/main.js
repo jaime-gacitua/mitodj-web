@@ -381,7 +381,7 @@
           transform: scale(1.2) !important;
           transform-origin: center !important;
         }
-        .fire-icon, .water-icon, .herb-icon {
+        .fire-icon, .water-icon {
           font-size: 96px !important;
         }
       }
@@ -415,7 +415,7 @@
           transform: scale(1.2) !important;
           transform-origin: center !important;
         }
-        .fire-icon, .water-icon, .herb-icon {
+        .fire-icon, .water-icon {
           font-size: 96px !important;
         }
       }
@@ -1010,17 +1010,7 @@
       waterIcon.textContent = '💧';
       logoGroup.appendChild(waterIcon);
 
-      // Add herb icon on the 27th bar for calm segments
-      const herbIcon = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      herbIcon.setAttribute('x', '0');
-      herbIcon.setAttribute('y', '0');
-      herbIcon.setAttribute('font-size', '48');
-      herbIcon.setAttribute('text-anchor', 'middle');
-      herbIcon.setAttribute('dominant-baseline', 'middle');
-      herbIcon.setAttribute('opacity', '0');
-      herbIcon.setAttribute('class', 'herb-icon');
-      herbIcon.textContent = '🌿';
-      logoGroup.appendChild(herbIcon);
+      
 
       // Position and animate water droplet icon on the 26th bar
       const waterBarIndex = 25; // 26th bar (0-indexed)
@@ -1042,25 +1032,7 @@
         }, waterFadeTime);
       }
 
-      // Position and animate herb icon on the 27th bar
-      const herbBarIndex = 26; // 27th bar (0-indexed)
-      if (barNodes[herbBarIndex]) {
-        const herbBar = barNodes[herbBarIndex];
-        const herbX = herbBar.x + Number(herbBar.node.getAttribute('width')) / 2; // Center on bar
-        const herbY = herbBar.y; // On the bar
-        
-        // Position herb icon
-        herbIcon.setAttribute('x', herbX);
-        herbIcon.setAttribute('y', herbY);
-        
-        // Fade in herb icon when logo reaches that bar
-        const herbFadeTime = barAppearDuration + (herbBarIndex / (barNodes.length - 1)) * clockLogoDuration;
-        tl.to(herbIcon, {
-          opacity: 1,
-          duration: 0.5,
-          ease: 'power2.out'
-        }, herbFadeTime);
-      }
+
 
       // Add trophy emoji at the bottom right of the last bar
       const trophyIcon = document.createElementNS('http://www.w3.org/2000/svg', 'text');
