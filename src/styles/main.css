@@ -461,6 +461,62 @@ main { min-height: 100%; }
   .beats__svg {
     margin-top: 1.25rem;
   }
+  
+  /* Mobile WHY section - stack cards vertically */
+  .why-section .cards-container {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
+  }
+  
+  .why-card {
+    padding: 24px 20px;
+  }
+  
+  .why-card__icon {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 16px;
+  }
+  
+  .why-card__icon img {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .why-card__title {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+  
+  .why-card__text {
+    font-size: 14px;
+    max-width: none;
+  }
+  
+  /* Additional mobile WHY section overrides */
+  .why-section {
+    width: calc(100% - 40px) !important;
+    margin: 20px auto 40px auto !important;
+    padding: 30px 20px !important;
+  }
+  
+  .why-section .cards-container {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+}
+
+/* Additional breakpoint for very small screens */
+@media (max-width: 480px) {
+  .why-section .cards-container {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  
+  .why-card {
+    padding: 20px 16px !important;
+  }
 }
 
 /* Prefer small viewport height to avoid jump when mobile chrome hides/shows */

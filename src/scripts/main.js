@@ -562,11 +562,14 @@
     if (canScrollTrigger && !prefersReduced) {
       gsap.registerPlugin(ScrollTrigger);
 
+      // Check if mobile device
+      const isMobile = window.innerWidth <= 768;
+      
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: svgEl,
-          start: 'top 90%',
-          end: 'bottom 60%',
+          start: isMobile ? 'top 90%' : 'top 90%',
+          end: isMobile ? 'top 50%' : 'bottom 60%',
           scrub: 0.5,
           markers: DEBUG_SCROLL,
         },
